@@ -4,9 +4,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 public class UniqueItems {
 	public static void main(String[] args) throws IOException {
@@ -15,7 +15,7 @@ public class UniqueItems {
         String line;
         while ((line = buffer.readLine()) != null) {
             line = line.trim();
-            Set<Integer> uniqueNums = new HashSet<Integer>();
+            SortedSet<Integer> uniqueNums = new TreeSet<Integer>();
             for (String num : line.split(",")) {
             	uniqueNums.add(Integer.parseInt(num));
             }
