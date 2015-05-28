@@ -1,4 +1,4 @@
-package easy;
+package net.mwahba.codeeval.easy;
 
 public class SumFirstThousandPrimes {
 

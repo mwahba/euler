@@ -1,11 +1,11 @@
-package easy;
+package net.mwahba.codeeval.easy;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class BitPositions {
+public class MultiplesOfNumber {
 
 	/**
 	 * @param args
@@ -19,16 +19,15 @@ public class BitPositions {
         while ((line = buffer.readLine()) != null) {
             line = line.trim();
             String[] lineContents = line.split(",");
-            int firstPosition = Integer.parseInt(lineContents[1]) - 1, secondPosition = Integer.parseInt(lineContents[2]) - 1;
-            String bitNum = Integer.toBinaryString(Integer.parseInt(lineContents[0]));
-            if (bitNum.charAt(firstPosition) == bitNum.charAt(secondPosition)) {
-            	System.out.println("true");
-            } else {
-            	System.out.println("false");
+            int limit = Integer.parseInt(lineContents[0]), multiplicand = Integer.parseInt(lineContents[1]), currentNum = 1;
+            while (currentNum * multiplicand < limit) {
+            	currentNum++;
             }
+            System.out.println(currentNum * multiplicand);
         }
         
         buffer.close();
+
 	}
 
 }

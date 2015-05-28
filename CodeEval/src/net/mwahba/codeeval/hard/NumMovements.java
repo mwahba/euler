@@ -1,4 +1,4 @@
-package hard;
+package net.mwahba.codeeval.hard;
 
 import java.math.BigInteger;
 public class NumMovements {

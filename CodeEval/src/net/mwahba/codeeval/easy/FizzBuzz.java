@@ -1,4 +1,4 @@
-package easy;
+package net.mwahba.codeeval.easy;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
