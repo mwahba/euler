@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class HexToDecimal {
+public class FirstNonRepeatedCharacter {
 
 	public static void main(String[] args) throws IOException {
 		File file = new File(args[0]);
@@ -13,7 +13,12 @@ public class HexToDecimal {
         String line;
         
         while ((line = buffer.readLine()) != null) {
-            System.out.println(Integer.parseInt(line, 16));
+            for (Character c : line.toCharArray()) {
+            	if (line.indexOf(c) == line.lastIndexOf(c)) {
+            		System.out.println(c);
+            		break;
+            	}
+            }
         }
         
         buffer.close();

@@ -56,18 +56,19 @@ public class LowestCommonAncestor {
 			int secondNum, BinaryTree<Integer> tree) {
 		
 		int firstTraverse = tree.lookup(firstNum), secondTraverse = tree.lookup(secondNum);
-		if (firstTraverse == secondTraverse) {
-			if (firstTraverse == 2) {
-				getLowestCommonAncestor(firstNum, secondNum, tree.traverseLeft());
-			} else if (firstTraverse == 3) {
-				getLowestCommonAncestor(firstNum, secondNum, tree.traverseRight());
-			} else if (firstTraverse == 1) {
+		if (firstTraverse == secondTraverse) { // when the lookups return the same value for both
+			if (firstTraverse == 2) { // both are in the left subtree
+				return getLowestCommonAncestor(firstNum, secondNum, tree.traverseLeft());
+			} else if (firstTraverse == 3) { // both are in the right subtree from current node
+				return getLowestCommonAncestor(firstNum, secondNum, tree.traverseRight());
+			} else if (firstTraverse == 1) { // both are at this current node
 				return tree.getRoot();
 			}
-		} else if (firstTraverse != secondTraverse) {
-			if (firstTraverse == 2 && secondTraverse == 3) {
+		} else if (firstTraverse != secondTraverse) { // when the lookups return two different values
+			if ((firstTraverse == 2 && secondTraverse == 3) || (firstTraverse == 3 && secondTraverse == 2) 
+					|| (firstTraverse == 1  || secondTraverse == 1)) { // when each of the nodes are in different areas
 				return tree.getRoot();
-			} else {
+			} else { // when there is an error
 				return -1;
 			}
 		}

@@ -97,16 +97,20 @@ public class BinaryTree<T> {
 	 * 	-1 otherwise
 	 */
 	public int lookup (T data) {
-		if (this.root == null) {
+		try {
+			if (this.root == null) { // if the current root is null
+				return 0;
+			} else if (this.root == data) {
+				return 1;
+			} else if (this.left.lookup(data) >= 1) {
+				return 2;
+			} else if (this.right.lookup(data) >= 1) {
+				return 3;
+			} else {
+				return -1;
+			}
+		} catch (NullPointerException e) {
 			return 0;
-		} else if (this.root == data) {
-			return 1;
-		} else if (this.left.lookup(data) > 1) {
-			return 2;
-		} else if (this.right.lookup(data) > 1) {
-			return 3;
-		} else {
-			return -1;
 		}
 	}
 	
@@ -145,6 +149,19 @@ public class BinaryTree<T> {
 	
 	public int getLevel() {
 		return new Integer(this.level);
+	}
+	
+	public String toString() {
+		String asString = "[" + this.level + "]: " + this.root.toString();
+		if (this.hasLeft()) {
+			asString += "\n" + this.left.toString();
+		}
+		
+		if (this.hasRight()) {
+			asString += "\n" + this.right.toString();
+		}
+		
+		return asString;
 	}
 	
 }
