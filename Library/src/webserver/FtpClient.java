@@ -59,7 +59,7 @@ public class FtpClient {
                 System.out.println("Succesfully connected to FTP server");
             }
 
-            /* Adjusting the output since edited the FileZilla welcome message on server. 
+            /* Adjusting the output since edited the FileZilla welcome message on server.
             if (FILEZILLA) {
                 for (int i = 0; i < 2; i++) {
                     currentResponse = controlReader.readLine();
@@ -96,13 +96,13 @@ public class FtpClient {
             currentResponse = sendCommand("PASV" + CRLF, 227);
             data_port = extractDataPort(currentResponse);
 
-			//TODO might have to utilize the PORT command: PORT 224,108,19,1,int_floor(data_port/256),data_port-int_floor(data_port/256) --> return 200 PORT command successful
+			// might have to utilize the PORT command: PORT 224,108,19,1,int_floor(data_port/256),data_port-int_floor(data_port/256) --> return 200 PORT command successful
 			// aka ip address, then the data port in a similar representation to how it was received from the FTP server
             // connect to the data port
             Socket data_socket = new Socket(LOCALHOST, data_port);
             DataInputStream data_reader = new DataInputStream(data_socket.getInputStream());
 
-            // TODO download file from ftp server
+            // download file from ftp server
             // command is "RETR filename", returns 150 for file status okay, 226 transfer complete upon completion
             sendCommand("RETR " + file_name + CRLF, 150);
             
@@ -111,6 +111,9 @@ public class FtpClient {
             
             // Write data on a local file
             createLocalFile(data_reader, file_name);
+            
+            data_reader.close();
+            data_socket.close();
 
         } catch (UnknownHostException ex) {
             System.out.println("UnknownHostException: " + ex);
