@@ -59,6 +59,7 @@ public class FtpClient {
                 System.out.println("Succesfully connected to FTP server");
             }
 
+            /* Adjusting the output since edited the FileZilla welcome message on server. 
             if (FILEZILLA) {
                 for (int i = 0; i < 2; i++) {
                     currentResponse = controlReader.readLine();
@@ -66,11 +67,11 @@ public class FtpClient {
                         System.out.println("Current FTP response: " + currentResponse);
                     }
                 }
-            }
+            }*/
 
             // send user name and password to ftp server
-            sendCommand("USER " + username, 331);
-			sendCommand("PASS " + password, 230);
+            sendCommand("USER " + username + CRLF, 331);
+			sendCommand("PASS " + password + CRLF, 230);
 
         } catch (UnknownHostException ex) {
             System.out.println("UnknownHostException: " + ex);
@@ -87,10 +88,12 @@ public class FtpClient {
 		int data_port = 0; // initialize the data port        
 		try {
             // change to current (root) directory first
-            sendCommand("CWD /", 250);
+			// might require "CD /" instead of CWD
+            sendCommand("CWD /" + CRLF, 250);
 
             // set to passive mode and retrieve the data port number from response
-            currentResponse = sendCommand("PASV", 227);
+            sendCommand("TYPE A" + CRLF, 200);
+            currentResponse = sendCommand("PASV" + CRLF, 227);
             data_port = extractDataPort(currentResponse);
 
 			//TODO might have to utilize the PORT command: PORT 224,108,19,1,int_floor(data_port/256),data_port-int_floor(data_port/256) --> return 200 PORT command successful
@@ -101,7 +104,7 @@ public class FtpClient {
 
             // TODO download file from ftp server
             // command is "RETR filename", returns 150 for file status okay, 226 transfer complete upon completion
-            sendCommand("retr " + file_name, 150);
+            sendCommand("RETR " + file_name + CRLF, 150);
             
             // check if the transfer was succesful
             checkResponse(226);
