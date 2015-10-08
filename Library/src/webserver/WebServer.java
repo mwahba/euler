@@ -1,3 +1,8 @@
+/**
+ * AU15 - CSE 5461 - Networking - Programming Assignment 1 - Web Server
+ * @author Mark Wahba, built on skeleton provided by Dr. Giovani
+ * @since September 29, 2015
+ */
 package webserver;
 
 import java.io.BufferedReader;
@@ -11,11 +16,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.StringTokenizer;
 
-/**
- * AU15 - CSE 5461 - Networking - Programming Assignment 1 - Web Server
- * @author Mark Wahba
- * @since September 29, 2015
- */
 public class WebServer {
 	private static int PORT = 6789;
 	
@@ -54,7 +54,7 @@ public class WebServer {
 }
 
 final class HttpRequest implements Runnable {
-	final static String CRLF = "\r\n";
+	final static String CRLF = "\r\n", USERNAME = "user", PASSWORD = "password";
 	Socket socket;
 	
 	//Constructor
@@ -112,7 +112,7 @@ final class HttpRequest implements Runnable {
 		String requestLine = br.readLine();
 		
 		// Display the request line.
-		System.out.println("\n" + requestLine);
+		System.out.println("\nRequest:\n" + requestLine);
 		
 		// Get and display the header lines.
 		String headerLine = null;
@@ -124,49 +124,60 @@ final class HttpRequest implements Runnable {
 		StringTokenizer tokens = new StringTokenizer(requestLine);
 		tokens.nextToken(); // skip over "GET"
 		String fileName = "." + tokens.nextToken(); // file name with prepended "."
-		if (fileName.equals(".")) {
+		if (fileName.equals("./")) {
 			fileName = "./index.html";
 		}
+		
+		// Construct the response message
+		String statusLine = "", contentTypeLine = "", entityBody = "", fileType = findContentType(fileName);
 		
 		// Open the requested file
 		FileInputStream fis = null;
 		boolean fileExists = true;
+		
 		try {
 			fis = new FileInputStream(fileName);
 		} catch (FileNotFoundException e) {
 			fileExists = false;
 		}
 		
-		// Construct the response message
-		String statusLine = null, contentTypeLine = null, entityBody = null;
-		
 		if (fileExists) {
-			statusLine = "HTTP/1.1 200 OK";
-			contentTypeLine = "Content-Type: " + findContentType(fileName) + CRLF;
-		} else {
+			statusLine = "HTTP/1.1 200 OK" + CRLF;
+			contentTypeLine = "Content-Type: " + fileType + CRLF;
+		} else if (fileType.equals("text/plain")) { 
 			// if the file requested is any type other than a text (.txt) file, report error to the web client
+			// retrieve the text (.txt) file from the local FTP server
+			FtpClient ftp = new FtpClient();
 			
-			if (!findContentType(fileName).equals("text/plain")) {
-				statusLine = "HTTP/1.1 404 Not Found";
-				contentTypeLine = "text/html";
-				entityBody = "<HTML><HEAD><TITLE>Not Found</TITLE></HEAD><BODY>Not Found</BODY></HTML>";
-			} else {
-				// retrieve the text (.txt) file from the local FTP server
-				FtpClient ftp = new FtpClient();
-				
-				ftp.connect("user", "password");
-				
-				statusLine = "HTTP/1.1 200 OK";
+			ftp.connect(USERNAME, PASSWORD);
+			
+			// Retrieve the file from the FTP server
+			try {
+				ftp.getFile(fileName);
+				fileExists = true;
+			} catch (IOException e) {
+				fileExists = false;
+			}
+			
+			// disconnect from the FTP server
+			ftp.disconnect();
+			
+			if (fileExists) {
+				statusLine = "HTTP/1.1 200 OK" + CRLF;
 				contentTypeLine = "Content-Type: text/plain" + CRLF;
 				
-				// Retrieve the file from the FTP server
-				ftp.getFile(fileName);
-				
-				// disconnect from the FTP server
-				ftp.disconnect();
-				
 				// assign input stream to read the recently ftp-downloaded file
-				fis = new FileInputStream(fileName);
+				try {
+					fis = new FileInputStream(fileName);
+				} catch (FileNotFoundException e) {
+					fileExists = false;
+				}
+			}
+			
+			if (!fileExists) {
+				statusLine = "HTTP/1.1 404 Not Found" + CRLF;
+				contentTypeLine = "Content-Type: text/html" + CRLF;
+				entityBody = "<HTML><HEAD><TITLE>Not Found</TITLE></HEAD><BODY>Not Found</BODY></HTML>";
 			}
 			
 		}
@@ -180,13 +191,11 @@ final class HttpRequest implements Runnable {
 		if (fileExists) {
 			sendBytes(fis, os);
 			fis.close();
-		} else if (!findContentType(fileName).equals("text/plain")) {
-			os.writeBytes(entityBody);
 		} else {
-			sendBytes(fis, os);
+			os.writeBytes(entityBody);
 		}
 		
-		System.out.println(statusLine + "\n" + contentTypeLine + "\n" + entityBody);
+		System.out.println("\nResponse:\n" + statusLine + contentTypeLine + entityBody);
 		
 		//fis.close();
 		os.close();

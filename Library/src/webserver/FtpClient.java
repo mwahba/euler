@@ -1,3 +1,12 @@
+/**
+ * AU15 - CSE 5461 - Networking - Programming Assignment 1 - FTP Client
+ * This is the main FTP client. Study the code and figure out what 
+ * each function does before adding to it. You only need to add code 
+ * wherever you see a '?'
+ *
+ * @author Giovani, Mark Wahba (wahba.2@osu.edu)
+ * @since October 4<sup>th</sup>, 2015
+ */
 package webserver;
 
 import java.io.BufferedReader;
@@ -13,20 +22,11 @@ import java.net.UnknownHostException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- *
- * This is the main FTP client. Study the code and figure out what 
- * each function does before adding to it. You only need to add code 
- * wherever you see a '?'
- *
- * @author Giovani, Mark Wahba (wahba.2@osu.edu)
- * @since October 4<sup>th</sup>, 2015
- */
 public class FtpClient {
 
     final static String CRLF = "\r\n";
     private boolean FILEZILLA = true;		// Enabled if connecting to FILEZILLA Server
-    private boolean DEBUG = true;		// Debug Flag
+    private boolean DEBUG = false;		// Debug Flag
     private Socket controlSocket = null;
     private BufferedReader controlReader = null;
     private DataOutputStream controlWriter = null;
@@ -59,7 +59,7 @@ public class FtpClient {
                 System.out.println("Succesfully connected to FTP server");
             }
 
-            /* Adjusting the output since edited the FileZilla welcome message on server.
+            /* Adjusting the output since edited the FileZilla welcome message on server.*/
             if (FILEZILLA) {
                 for (int i = 0; i < 2; i++) {
                     currentResponse = controlReader.readLine();
@@ -67,7 +67,7 @@ public class FtpClient {
                         System.out.println("Current FTP response: " + currentResponse);
                     }
                 }
-            }*/
+            }/**/
 
             // send user name and password to ftp server
             sendCommand("USER " + username + CRLF, 331);
@@ -84,7 +84,7 @@ public class FtpClient {
      * Retrieve the file from FTP server after connection is established
      * @param file_name: the name of the file to retrieve
      */
-    public void getFile(String file_name) {
+    public void getFile(String file_name) throws Exception {
 		int data_port = 0; // initialize the data port        
 		try {
             // change to current (root) directory first
@@ -104,21 +104,28 @@ public class FtpClient {
 
             // download file from ftp server
             // command is "RETR filename", returns 150 for file status okay, 226 transfer complete upon completion
-            sendCommand("RETR " + file_name + CRLF, 150);
+            String response = sendCommand("RETR " + file_name + CRLF, 150);
             
             // check if the transfer was succesful
-            checkResponse(226);
+            boolean fileFound = response.startsWith("150") && checkResponse(226);
             
-            // Write data on a local file
-            createLocalFile(data_reader, file_name);
-            
-            data_reader.close();
+            if (fileFound) {
+            	// Write data on a local file
+            	createLocalFile(data_reader, file_name);
+            } else {
+            	data_socket.close();
+            	data_reader.close();
+            	throw new IOException();
+            }
+        	
             data_socket.close();
+            data_reader.close();
 
         } catch (UnknownHostException ex) {
             System.out.println("UnknownHostException: " + ex);
         } catch (IOException ex) {
-            System.out.println("IOException: " + ex);
+            //System.out.println("IOException: " + ex);
+            throw new IOException();
         }
     }
 
