@@ -1,0 +1,11 @@
+section {
+	margin-bottom: 5em;
+}
+
+footer {
+    position: fixed;
+    width: 100%;
+    top: calc(100% - 5em);
+    background: grey;
+    height: 5em;
+}
