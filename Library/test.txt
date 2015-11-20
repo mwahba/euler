@@ -1,1 +1,3 @@
+Hello FTP world!
+Here's a change to the text. And another!
 some text here lorem ipsum.
