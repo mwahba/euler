@@ -1,9 +1,4 @@
-/**
- * AU15 - CSE 5461 - Networking - Programming Assignment 1 - Web Server
- * @author Mark Wahba, built on skeleton provided by Dr. Giovani
- * @since September 29, 2015
- */
-package webserver;
+package networking.projecttwo;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -12,85 +7,23 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.StringTokenizer;
 
-public class WebServer {
-	private static int PORT = 6789;
-	
-	public static void main(String argv[]) throws Exception {
-		// Establish the listen socket
-		final ServerSocket socket = new ServerSocket(PORT);
-		
-		// Close the server properly when server is shut down
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			@Override
-			public void run() {
-				try {
-					socket.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		});
-		
-		// Process HTTP service requests in an infinite loop
-		while (true) {
-			// Listen for a TCP connection Request
-			// blocks until finds an incoming connection to accept
-			Socket clientSocket = socket.accept();
-			
-			// Construct an object to process the HTTP request message.
-			HttpRequest request = new HttpRequest(clientSocket);
-			
-			// Create a new thread to process the request
-			Thread thread = new Thread(request);
-			
-			// Start the thread
-			thread.start();
-		}
-	}
-}
+import webserver.FtpClient;
 
-final class HttpRequest implements Runnable {
-	final static String CRLF = "\r\n", USERNAME = "user", PASSWORD = "password";
+final class Request implements Runnable {
+	final static String CRLF = "\r\n", USERNAME = "user", PASSWORD = "password",
+			LOGIN = "login";
+	
 	Socket socket;
 	
-	//Constructor
-	public HttpRequest(Socket socket) throws Exception {
-		this.socket = socket;
-	}
+	Model model;
 	
-	/**
-	 * Private method to return the file MIME type.
-	 * @param fileName The file whose content type is in question.
-	 * @return The file's MIME type to be returned.
-	 */
-	private String findContentType(String fileName) {
-		String lcFileName = fileName.toLowerCase();
-		
-		if (lcFileName.endsWith(".htm") || lcFileName.endsWith(".html")) {
-			return "text/html";
-		} 
-		
-		if (lcFileName.endsWith(".gif")) {
-			return "image/gif";
-		}
-		
-		if (lcFileName.endsWith(".jpg") || lcFileName.endsWith(".jpeg")) {
-			return "image/jpeg";
-		}
-		
-		if (lcFileName.endsWith(".txt")) {
-			return "text/plain";
-		}
-		
-		if (lcFileName.endsWith(".png")) {
-			return "image/png";
-		}
-		
-		return "application/octet-stream";
+	//Constructor
+	public Request(Socket socket) throws Exception {
+		this.socket = socket;
+		this.model = new Model();
 	}
 	
 	private static void sendBytes(FileInputStream fis, DataOutputStream os) throws Exception {
@@ -104,14 +37,46 @@ final class HttpRequest implements Runnable {
 		}
 	}
 	
+	private String trim(String string) {
+		return string.replaceAll("[^A-Za-z0-9]", "");
+	}
+	
 	private void processRequest() throws Exception {
 		// Get a reference to the socket's input and output streams
 		InputStream is = socket.getInputStream();
 		DataOutputStream os = new DataOutputStream(socket.getOutputStream());
-		
-		// Set up input stream filters.
 		BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
 		
+		os.writeBytes("Enter a username: ");
+		
+		String username = trim(br.readLine());
+		
+		int id = model.login(username);
+		
+		os.writeBytes(model.checkUpdates(id));
+		
+		String command;
+		
+		do {
+			os.writeBytes("Enter command: ");
+			command = br.readLine();
+			
+			switch (command) {
+			case "list":
+				model.listGroups(id);
+				break;
+			case "join":
+				os.writeBytes("\tGroup ID to join: ");
+				model.joinGroup(id, Integer.parseInt(trim(br.readLine())));
+				break;
+			case "leave":
+				os.writeBytes("\tGroup ID to leave: ");
+				model.leaveGroup(id, Integer.parseInt(trim(br.readLine())));
+			case "exit":
+				model.updateLastActive(id);
+				break;
+			}
+		} while (!command.equalsIgnoreCase("exit"));
 		// Get the request line of the HTTP request message
 		String requestLine = br.readLine();
 		
@@ -126,14 +91,17 @@ final class HttpRequest implements Runnable {
 		
 		// Extract the filename from the request line.
 		StringTokenizer tokens = new StringTokenizer(requestLine);
-		tokens.nextToken(); // skip over "GET"
+		String currentCommand = tokens.nextToken();
+		if (currentCommand.equals(LOGIN)) {
+			
+		}
 		String fileName = "." + tokens.nextToken(); // file name with prepended "."
 		if (fileName.equals("./")) {
 			fileName = "./index.html";
 		}
 		
 		// Construct the response message
-		String statusLine = "", contentTypeLine = "", entityBody = "", fileType = findContentType(fileName);
+		String statusLine = "", contentTypeLine = "", entityBody = "", fileType = "";
 		
 		// Open the requested file
 		FileInputStream fis = null;
