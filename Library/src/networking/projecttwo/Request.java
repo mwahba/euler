@@ -49,9 +49,9 @@ final class Request implements Runnable {
 		
 		os.writeBytes("Enter a username: ");
 		
-		String username = trim(br.readLine());
-		
-		int id = model.login(username);
+		String[] userResult = model.login(trim(br.readLine()));
+		os.writeBytes(userResult[0]);
+		int id = Integer.parseInt(userResult[1]);
 		
 		os.writeBytes(model.checkUpdates(id));
 		
@@ -63,15 +63,23 @@ final class Request implements Runnable {
 			
 			switch (command) {
 			case "list":
-				model.listGroups(id);
+				os.writeBytes(model.listGroups(id));
 				break;
+				
 			case "join":
 				os.writeBytes("\tGroup ID to join: ");
-				model.joinGroup(id, Integer.parseInt(trim(br.readLine())));
+				os.writeBytes(model.joinGroup(id, Integer.parseInt(trim(br.readLine()))));
 				break;
+				
 			case "leave":
 				os.writeBytes("\tGroup ID to leave: ");
 				model.leaveGroup(id, Integer.parseInt(trim(br.readLine())));
+				break;
+				
+			case "post":
+				
+				break;
+				
 			case "exit":
 				model.updateLastActive(id);
 				break;
