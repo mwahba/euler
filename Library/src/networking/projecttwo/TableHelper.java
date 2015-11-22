@@ -58,7 +58,6 @@ public class TableHelper {
                     rightPad(row[colNum], colWidths[colNum]));
                 buf.append(' ');
             }
- 
             buf.append('\r').append('\n');
         }
  

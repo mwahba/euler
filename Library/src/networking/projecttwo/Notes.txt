@@ -3,71 +3,80 @@ CREATE DATABASE board;
 USE board;
 
 CREATE TABLE `group` (
-id int NOT NULL auto_increment,
-name varchar(255),
-PRIMARY KEY (id)
+	id int NOT NULL auto_increment,
+	name varchar(255),
+	PRIMARY KEY (id)
 );
 
 CREATE TABLE user (
-id int NOT NULL auto_increment,
-username varchar(255),
-joined timestamp,
-lastActive timestamp,
-PRIMARY KEY (id)
+	id int NOT NULL auto_increment,
+	username varchar(255),
+	joined timestamp,
+	lastActive timestamp,
+	PRIMARY KEY (id)
 );
 
 
 CREATE TABLE message (
-id int NOT NULL auto_increment,
-author int,
-`group` int,
-posted timestamp,
-subject varchar(255),
-content blob,
-PRIMARY KEY (id),
-FOREIGN KEY (author) REFERENCES user(id),
-FOREIGN KEY (`group`) REFERENCES `group`(id)
+	id int NOT NULL auto_increment,
+	author int,
+	`group` int,
+	posted timestamp,
+	subject varchar(255),
+	content blob,
+	PRIMARY KEY (id),
+	FOREIGN KEY (author) REFERENCES user(id),
+	FOREIGN KEY (`group`) REFERENCES `group`(id)
 );
 
 CREATE TABLE userInGroup (
-user int,
-`group` int,
-joined timestamp,
-`left` timestamp,
-FOREIGN KEY (user) REFERENCES user(id),
-FOREIGN KEY (`group`) REFERENCES `group`(id)
+	user int,
+	`group` int,
+	joined timestamp,
+	`left` timestamp,
+	FOREIGN KEY (user) REFERENCES user(id),
+	FOREIGN KEY (`group`) REFERENCES `group`(id)
 );
 
 SQL statements:
 User attempts login:
-SELECT id FROM user WHERE username=’test’
+	SELECT id FROM user WHERE username=’test’
 
 New user joins:
 	INSERT INTO user (username, joined, lastActive) VALUES (‘test’, NOW(), NOW())
 
 Check if any new users joined since last time active:
-SELECT user.username, group.name FROM user, group, userInGroup WHERE userInGroup.joined >= (SELECT lastActive FROM user WHERE id = 1 /* ID of current user */) AND userInGroup.left NOT NULL AND group.id = userInGroup.group AND group.id = 1 /* ID of current group */
+	SELECT user.username, group.name FROM user, group, userInGroup 
+	WHERE userInGroup.joined >= (SELECT lastActive FROM user WHERE id = 1 /* ID of current user */) 
+		AND userInGroup.left NOT NULL 
+		AND group.id = userInGroup.group 
+		AND group.id = 1 /* ID of current group */
 
 Can expand to multiple groups, check if any new users joined any groups that the current user is in since last time active:
-SELECT user.username, group.name FROM user, group, userInGroup WHERE userInGroup.joined >= (SELECT lastActive FROM user WHERE id = 1 /* ID of current user */) AND userInGroup.left NOT NULL AND group.id = userInGroup.group AND group.id in (SELECT group FROM userInGroup WHERE user = 1 /* ID of current user */)
+	SELECT user.username, group.name FROM user, group, userInGroup 
+	WHERE userInGroup.joined >= (SELECT lastActive FROM user WHERE id = 1 /* ID of current user */)
+	AND userInGroup.left NOT NULL 
+	AND group.id = userInGroup.group 
+	AND group.id 
+		in (SELECT group FROM userInGroup WHERE user = 1 /* ID of current user */)
 
 Update user’s last active to now
 	UPDATE user SET lastActive = NOW() WHERE id = 1
 
 User joins a group:
-IF (SELECT COUNT(*) FROM userInGroup WHERE user = 1 and group = 2) > 0
-THEN UPDATE userInGroup SET joined = NOW() AND left = null;
-ELSE INSERT INTO userInGroup (user, group, joined) VALUES (1, 1, NOW());
-END IF;
+	IF (SELECT COUNT(*) FROM userInGroup WHERE user = 1 and group = 2) > 0
+	THEN UPDATE userInGroup SET joined = NOW() AND left = null;
+	ELSE INSERT INTO userInGroup (user, group, joined) VALUES (1, 1, NOW());
+	END IF;
 
 User leaves a group:
-UPDATE userInGroup SET left = NOW() WHERE user = 1
+	UPDATE userInGroup SET left = NOW() WHERE user = 1
 
 User only sees up to last two messages from time joined the group:
-SELECT id, author, posted, subject FROM message WHERE date >= (SELECT posted FROM message WHERE date <= (SELECT joined FROM userInGroup WHERE user = 1 and group = 2) LIMIT 1, 1)
+	SELECT id, author, posted, subject FROM message WHERE date >= (SELECT posted FROM message WHERE date <= (SELECT joined FROM userInGroup WHERE user = 1 and group = 2) LIMIT 1, 1)
 
 Display all users in a group:
-SELECT id, username FROM user WHERE id in (SELECT user FROM userInGroup WHERE group = 1)
+	SELECT id, username FROM user WHERE id in (SELECT user FROM userInGroup WHERE group = 1)
 
 Retrieve the message content (verify user in group first?)
-SELECT content FROM message WHERE id = 1
+	SELECT content FROM message WHERE id = 1
