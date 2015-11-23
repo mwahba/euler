@@ -2,13 +2,15 @@ CREATE DATABASE board;
 
 USE board;
 
-CREATE TABLE `group` (
+groups: id, name
+CREATE TABLE groups (
 	id int NOT NULL auto_increment,
 	name varchar(255),
 	PRIMARY KEY (id)
 );
 
-CREATE TABLE user (
+users: id, username, joined, lastActive
+CREATE TABLE users (
 	id int NOT NULL auto_increment,
 	username varchar(255),
 	joined timestamp,
@@ -17,25 +19,27 @@ CREATE TABLE user (
 );
 
 
-CREATE TABLE message (
+messages: id, userID, groupID, posted, subject, content
+CREATE TABLE messages (
 	id int NOT NULL auto_increment,
-	author int,
-	`group` int,
+	userID int,
+	groupID int,
 	posted timestamp,
 	subject varchar(255),
 	content blob,
 	PRIMARY KEY (id),
-	FOREIGN KEY (author) REFERENCES user(id),
-	FOREIGN KEY (`group`) REFERENCES `group`(id)
+	FOREIGN KEY (userID) REFERENCES users(id),
+	FOREIGN KEY (groupID) REFERENCES groupID(id)
 );
 
+usersInGroups: userID, groupID, joined, leftDate
 CREATE TABLE userInGroup (
-	user int,
-	`group` int,
+	userID int,
+	groupID int,
 	joined timestamp,
-	`left` timestamp,
-	FOREIGN KEY (user) REFERENCES user(id),
-	FOREIGN KEY (`group`) REFERENCES `group`(id)
+	leftDate timestamp,
+	FOREIGN KEY (user) REFERENCES users(id),
+	FOREIGN KEY (groupID) REFERENCES groups(id)
 );
 
 SQL statements:

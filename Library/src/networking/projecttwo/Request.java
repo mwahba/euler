@@ -76,6 +76,10 @@ final class Request implements Runnable {
 			case "groups":
 				os.writeBytes(model.listGroups(userID));
 				break;
+				
+			case "updates":
+				os.writeBytes(model.checkUpdates(userID));
+				break;
 			
 			case "users":
 				os.writeBytes(model.listUsers());
