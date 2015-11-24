@@ -14,6 +14,7 @@ Abilities and limitations:
 	The user can only see messages in groups that they have joined.
 	The user can join and leave any group at any time.
 	The user is able to see all the messages within a group using the 'listmessages' command.
+	The user is not allowed to utilize a pipe character within the subject name.
 
 Protocol Design:
 	The protocol communicates using simple strings and commands. Each of the valid commands are to match up to some function of the protocol that matches with the model.

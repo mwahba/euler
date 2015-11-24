@@ -84,6 +84,10 @@ public class ClientPartTwo {
 		return groupID + "";
 	}
 	
+	private static String prep(String toSend) {
+		return toSend.replaceAll("'", "\'");
+	}
+	
 	public static void main(String[] args) {
 		String userInput;
 		sysIn = new BufferedReader(new InputStreamReader(System.in));
@@ -164,8 +168,8 @@ public class ClientPartTwo {
 						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.println("post");
 						validateResponse(readFromServer(), "groupID", userInputArray[1]);
-						validateResponse(readFromServer(), "subject", userInputArray[2].split("\\|")[0]);
-						validateResponse(readFromServer(), "content", userInputArray[2].split("\\|", 2)[1]);
+						validateResponse(readFromServer(), "subject", prep(userInputArray[2].split("\\|")[0]));
+						validateResponse(readFromServer(), "content", prep(userInputArray[2].split("\\|", 2)[1]));
 						break;
 						
 					case "groupusers":
@@ -198,6 +202,7 @@ public class ClientPartTwo {
 						
 					case "exit":
 						request.println("exit");
+						print(readFromServer());
 						break;
 						
 					case "help":
