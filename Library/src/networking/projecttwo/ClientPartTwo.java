@@ -115,7 +115,7 @@ public class ClientPartTwo {
 				if ((readFromServer()).startsWith("username")) {
 					System.out.print("\r\nEnter username: ");
 					while((userInput = sysIn.readLine()) == null || userInput.length() < 1) {
-						System.out.print("Username was empty, please enter a valid username.");
+						System.out.print("Username was empty, please enter a valid username: ");
 					}
 					// send username to server
 					request.writeBytes(userInput + "\r\n");
