@@ -70,6 +70,10 @@ final class Request implements Runnable {
 		return toSendBack.replace("\r\n", "|") + "|";
 	}
 	
+	private void reply(String toSendBack) throws IOException {
+		out.writeBytes(toSendBack + "\r\n");
+	}
+	
 	private void processRequest() throws Exception {
 		// Get a reference to the socket's input and output streams
 		InputStream is = socket.getInputStream();
@@ -78,12 +82,12 @@ final class Request implements Runnable {
 		
 		System.out.println("Client connected: " + socket.getRemoteSocketAddress().toString());
 		
-		out.writeBytes("username" + "|");
+		reply("username");
 		String username = trim(br.readLine());
 		System.out.println(username + " logging in.");
 		String[] userResult = model.login(username);
 		int userID = Integer.parseInt(userResult[1]);
-		out.writeBytes(response(userResult[0] + model.checkUpdates(userID)) + "|");
+		reply(response(userResult[0] + model.checkUpdates(userID)));
 		model.updateLastActive(userID);
 		
 		String command;
@@ -93,63 +97,62 @@ final class Request implements Runnable {
 			System.out.println("User " + username + " (" + userID + ") processing command: " + command);
 			switch (command.split(" ")[0].toLowerCase()) {
 			case "groups":
-				out.writeBytes(response(model.listGroups(userID)) + "|");
+				reply(response(model.listGroups(userID)));
 				break;
 				
 			case "updates":
-				out.writeBytes(response(model.checkUpdates(userID)) + "|");
+				reply(response(model.checkUpdates(userID)));
 				model.updateLastActive(userID);
 				break;
 			
 			case "users":
-				out.writeBytes("groupID" + "|");
-				out.writeBytes(response(model.listUsers(processInput())) + "|");
+				reply("groupID");
+				reply(response(model.listUsers(processInput())));
 				break;
 				
 			case "join":
-				out.writeBytes("groupID" + "|");
-				out.writeBytes(response(model.joinGroup(userID, processInput())) + "|");
+				reply("groupID");
+				reply(response(model.joinGroup(userID, processInput())));
 				break;
 				
 			case "leave":
-				out.writeBytes("groupID" + "|");
-				out.writeBytes(response(model.leaveGroup(userID, processInput())) + "|");
+				reply("groupID");
+				reply(response(model.leaveGroup(userID, processInput())));
 				break;
 			
 			case "listmessages":
-				out.writeBytes("groupID" + "|");
-				out.writeBytes(response(model.getListOfMessages(userID, processInput())) + "|");
+				reply("groupID");
+				reply(response(model.getListOfMessages(userID, processInput())));
 				break;
 				
 			case "post":
-				out.writeBytes("groupID" + "|");
+				reply("groupID");
 				int groupID = processInput();
-				out.writeBytes("subject" + "|");
+				reply("subject");
 				String subject = readFromClient();
-				out.writeBytes("content" + "|");
+				reply("content");
 				String content = readFromClient();
-				out.writeBytes(response(model.postMessage(userID, groupID, subject, content)) + "|");				
+				reply(response(model.postMessage(userID, groupID, subject, content)));				
 				break;
 			
 			case "message":
-				out.writeBytes("messageID" + "|");
+				reply("messageID");
 				int messageID = Integer.parseInt(trim(br.readLine()));
-				out.writeBytes(response(model.getPost(userID, messageID)) + "|");
+				reply(response(model.getPost(userID, messageID)));
 				break;
 				
 			case "groupid":
 				String groupName;
 				if (command.split(" ").length == 1) {
-					out.writeBytes("groupName" + "|");
-					groupName = trim(readFromClient());
+					reply("Issue occurred with finding group ID command.");
 				} else {
 					groupName = command.split(" ")[1];
+					reply(model.getGroupID(groupName));
 				}
-				out.writeBytes(response(model.getGroupID(groupName)) + "|" + "|");
 				break;
 				
 			case "exit":
-				out.writeBytes("Server disconnecting..." + "|");
+				reply("Server disconnecting...");
 				break;
 				
 			default:

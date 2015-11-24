@@ -422,7 +422,7 @@ public class Model {
 		} else {
 			List<Integer> idList = getListOfIntegerResults("SELECT id FROM groups WHERE name = '" + groupIdentifier + "'", "id");
 			if (idList.size() != 1) {
-				return "";
+				return "0";
 			} else {
 				return idList.get(0) + "";
 			}

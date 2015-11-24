@@ -130,7 +130,7 @@ public class ClientPartTwo {
 				response = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				
 				// login
-				if ((readFromServer()).equals("username")) {
+				if ((readFromServer()).startsWith("username")) {
 					System.out.print("\r\nEnter username: ");
 					while((userInput = sysIn.readLine()) == null || userInput.length() < 1) {
 						System.out.print("Username was empty, please enter a valid username.");
