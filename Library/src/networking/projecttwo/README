@@ -1,0 +1,91 @@
+Mark Wahba (wahba.2@osu.edu)
+CSE 5461 - Dr. Giovani Abuaitah
+Programming Assignment 2 - A Simple Bulletin Board Using Socket Programming
+
+How to use:
+	1. Compile Server, Model, Request, ClientPartOne, ClientPartTwo
+	2. Run Server
+	3. Run ClientPartOne or ClientPartTwo
+	4. Follow instructions from the client programs
+	
+Abilities and limitations:
+	Only one user is allowed per request/client thread. This is established in the login portion of the client.
+	The user is only able to see updates from a group that he has joined so as to limit spamming the user with information that is of no use to them.
+	The user can only see messages in groups that they have joined.
+	The user can join and leave any group at any time.
+	The user is able to see all the messages within a group using the 'listmessages' command.
+
+Protocol Design:
+	The protocol communicates using simple strings and commands. Each of the valid commands are to match up to some function of the protocol that matches with the model.
+	The Request class establishes the protocol and is the one that parses such information. It is up to the client to send and communicate proper information to the server.
+	The request accepts different commands with separate requirements for each command:
+			groups: lists groups.
+			updates: lists updates for the user ID since the last time they were active.
+			users: Requires a group ID. Lists the users within the group ID indicated.
+			join: Requires a group ID. Allows the user to join the group.
+			leave: Requires a group ID. Allows the user to leave the group indicated.
+			listmessage: Requires a group ID. Lists the messages within the group so long as the user has already joined the group.
+			post: Requires a group ID, a subject, and the content of the message. Allows the user to post a new message to a group.
+			groupid: Requires a group name/ID. Responds back with the ID for the group indicated if the group exists.
+			exit: closes the connection.
+		
+	The Server class is constantly running checking for new connection requests. When such a request is found from the client, then a new Request instance is created for the client.
+	
+	The Model class establishes a connection to the database, and is responsible for parsing and communicating between the database and the controller. The model has multiple functions for each of the different features as per the requirements. These methods are to be called directly with their appropriate arguments passed in.
+		The model requires that a database be setup. The current datababse settings are set as global variables in Model.java:
+			JDBC_DRIVER = "com.mysql.jdbc.Driver" (implementation uses a mysql database, more changes may be required if another database type is used)
+			DB_URL = "jdbc:mysql://localhost/board" (where 'board' is the database to connect to)
+			USER = "user" (a username with proper permissions able to write and read from the 'board' database)
+			PASS = "password" (the password for the username indicated)
+			
+		The model requires the following database tables with their corresponding columns to be setup:
+			users:
+				id: int, auto increment, primary key
+				username: varchar
+				joined: timestamp, default is current
+				lastActive: timestamp, default is null or 0
+				
+			groups:
+				id: int, auto increment, primary key
+				name: varchar
+				
+			usersInGroups:
+				userID: int, foreign key referencing users.id
+				groupID: int, foreign key referencing groups.id
+				joined: timestamp, default is current
+				leftDate: timestamp, default is null or 0
+				
+			messages:
+				id: int, auto increment, primary key
+				userID: int, foreign key referencing users.id
+				groupID: int, foreign key referencing groups.id
+				posted: timestamp, default is current
+				subject: varchar
+				content: blob
+			
+			See Notes.txt for some scripts that would setup each of these tables.
+				
+		The model requires that the groups be inserted beforehand.
+		
+	The Request class acts as a controller and is responsible for communicating between the model and the client. There is one request per client and stores only one user ID. It does so as follows:
+		0. Waits for incoming message from the client.
+		1. Parses the incoming messages from the client.
+		2. Matches the message to the matching command ('join', 'leave', etc.). It is up to the client to send these properly. Otherwise an error will occur.
+		3. Requests any further information needed to complete the command from the client. These are accepted in a similar manner.
+		4. Upon gathering all information needed to execute the command, the request class calls the appropriate model method.
+		5. The request returns the model's response to the client.
+		6. Go back to 0.
+	
+	The Client classes act as the interface between the user and the data. It guides the user through the experience and requests the appropriate connections. The client sends the user ID to the request as part of the login process, this avoids issues with data integrity.
+	The Client has the following states: unconnected, login, connected, exiting. Each state of the client matches with certain criteria.
+		Unconnected: the client is not yet connected to the server, from here, the user can connect or exit.
+		Login: the user has requested to connect to a server, the client uses the user's provided data for the appropriate connection details. The client then asks the user for the appropriate username as per the requirements. The server should respond with a success as well as any updates that may have occurred.
+		Connected: the client has established a proper connection with the server and has a running request thread to interact with the server. The user can then perform the functions as appropriate and according to the requirements (see help files).
+		Exiting: the user has requested to exit the client. The client is then responsible for closing the established connections and streams and exits.
+	
+Server Implementation:
+	The server builds upon the webserver from project one.
+	The server is a loop that continuously checks for new connections and creates a new thread per request. The request is open as long as the client is connected to it.
+	The request utilizes a model object that interacts with a mysql database, set by default to port 3306 running on the localhost.
+	One request thread is available per client connection.
+	The model creates separate connections to the database per command, executes the appropriate command, obtains the results, then closes the connections. This design was chosen to allow multiple smaller connections and less blockage overall. 

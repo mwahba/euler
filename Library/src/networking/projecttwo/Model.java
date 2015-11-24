@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class Model {
 	
-	static final String JDBC_DRIVER = "com.mysql.jdbc.Driver",
+	private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver",
 			DB_URL = "jdbc:mysql://localhost/board",
 			USER = "user", PASS = "password";
 	
@@ -110,6 +110,7 @@ public class Model {
 		return result;
 	}
 	
+	
 	private List<Map<String, String>> getListOfResults(String statementString, String... toExtract) {
 		List<Map<String, String>> results = new ArrayList<Map<String, String>>();
 		Connection connection = createConnection();
@@ -172,7 +173,7 @@ public class Model {
 	}
 	
 	public String[] login(String username) {
-		String toPrint = "Welcome back " + username + ".\r\n";
+		String toPrint = "Welcome back " + username + ".";
 		
 		boolean userExists = getNumber("SELECT COUNT(id) as count FROM users WHERE username = '" + username + "';") > 0;
 		if (!userExists) {
@@ -188,52 +189,69 @@ public class Model {
 	}
 
 	public String checkUpdates(int id) {
-		String toPrint = "";
+		String toPrint = "\r\n";
 		
-		// Check if new users have joined since last time active
-		String statement = " (SELECT lastActive FROM users WHERE id = " + id + ") AND usersInGroups.leftDate != null AND groups.id = "
-				+ "usersInGroups.groupID AND groups.id in (SELECT groupID FROM usersInGroups WHERE userID = " + id + ");";
-		List<Map<String, String>> joined = getListOfResults("SELECT users.username, users.id, groups.name, groups.id FROM users, groups, "
-				+ "usersInGroups WHERE usersInGroups.joined >=" + statement, "users.username", "users.id", "groups.name", "groups.id");
+		// get the date the user was last active
+		String lastActive = getString("SELECT DATE_FORMAT(lastActive, '%Y-%c-%d %H:%i:%s') FROM users WHERE id = " + id);
 		
-		List<Map<String, String>> left = getListOfResults("SELECT users.username, groups.name FROM users, groups, "
-				+ "usersInGroups WHERE usersInGroups.leftDate >= " + statement, "users.username", "groups.name");
+		// get a list of ids for the groups that the user is a part of and has not yet left
+		List<Integer> userGroups = getListOfIntegerResults("SELECT groupID FROM usersInGroups WHERE userID = " + id + " AND leftDate = 0", 
+				"groupID");
 		
-		List<Map<String, String>> posted = getListOfResults("SELECT messages.id, messages.userID, messages.groupID, messages.subject "
-				+ "FROM messages, users, groups WHERE groupID in (SELECT groupID FROM usersInGroups WHERE userID = " + id + ") and "
-				+ "posted > (SELECT lastActive FROM users WHERE id = " + id + ") AND userID in (SELECT userID FROM usersInGroups "
-				+ "WHERE userID = " + id + " AND leftDate = 0)", "userID", "groupID", "id", "subject");
+		// Create new array to hold the users recently joined, left, and new messages posted
+		List<Map<String, String>> joined = new ArrayList<Map<String, String>>();
+		List<Map<String, String>> left = new ArrayList<Map<String, String>>();
+		List<Map<String, String>> posted = new ArrayList<Map<String, String>>();
 		
+		// for each group that the user is in
+		for (int userGroup : userGroups) {
+			// find any users who have joined the group
+			joined.addAll(getListOfResults("SELECT userID, groupID FROM usersInGroups WHERE joined > STR_TO_DATE('" + lastActive 
+					+ "', '%Y-%c-%d %H:%i:%s') AND groupID = " + userGroup, "userID", "groupID"));
+			
+			// find any users who have left the group
+			left.addAll(getListOfResults("SELECT userID, groupID FROM usersInGroups WHERE leftDate > STR_TO_DATE('" + lastActive 
+					+ "', '%Y-%c-%d %H:%i:%s') AND groupID = " + userGroup, "userID", "groupID"));
+			
+			// find the messages posted following the last active date, add them to 'posted'
+			posted.addAll(getListOfResults("SELECT id, userID, groupID, subject FROM messages WHERE posted > STR_TO_DATE('" + lastActive 
+					+ "', '%Y-%c-%d %H:%i:%s') AND groupID = " + userGroup, "id", "userID", "groupID", "subject"));
+		}
+		
+		// If there are any updates
 		if (joined.size() > 0 || left.size() > 0 || posted.size() > 0) {
+			// notify the user that updates have occurred
 			toPrint += "The following updates have occurred since you were last active: ";
+			
+			// if a user has joined a group
 			if (joined.size() > 0) {
 				for (Map<String, String> event : joined) {
-					toPrint += event.get("users.username") + " joined " + event.get("groups.name") + "\r\n";
+					toPrint += "\r\n" + getUserName(Integer.parseInt(event.get("userID"))) + " joined " + getGroupName(Integer.parseInt(event.get("groupID")));
 				}
 			}
 			
+			// if a user has left a group
 			if (left.size() > 0) {
 				for (Map<String, String> event : left) {
-					toPrint += event.get("users.username") + " left " + event.get("groups.name") + "\r\n";
+					toPrint += "\r\n" + getUserName(Integer.parseInt(event.get("userID"))) + " left " + getGroupName(Integer.parseInt(event.get("groupID")));
 				}
 			}
 			
+			// if a message was posted
 			if (posted.size() > 0) {
 				for (Map<String, String> message : posted) {
 					String username = getUserName(Integer.parseInt(message.get("userID"))), 
 							groupName = getGroupName(Integer.parseInt(message.get("groupID")));
-					toPrint += username + " (" + message.get("userID") + ") posted a new message in " + groupName + "(" + message.get("groupID") 
-							+ "): " + message.get("subject") + " (" + message.get("id") + ")\r\n";
+					toPrint += "\r\n" + username + " (" + message.get("userID") + ") posted a new message in " + groupName + " (" + message.get("groupID") 
+							+ "): " + message.get("subject") + " (" + message.get("id") + ")";
 				}
 			}
-		} else {
-			toPrint = "No new updates have occurred since you were last active.\r\n";
+		} else { // if there were no updates
+			toPrint = "No new updates have occurred since you were last active.";
 		}
 		
 		return toPrint;
 	}
-
-	
 
 	public String listGroups(int id) {		
 		TableHelper table = new TableHelper();
@@ -264,9 +282,9 @@ public class Model {
 			} else {
 				executeUpdate("INSERT INTO usersInGroups (userID, groupID, joined) VALUES (" + userID + ", " + groupID + ", NOW())");
 			}
-			return "You have successfully joined " + groupName + "\r\n" + getUsersForGroup(userID, groupID);
+			return "You have successfully joined " + groupName + "\r\n\r\nUsers:\r\n" + getUsersForGroup(userID, groupID);
 		} else {
-			return "You are already part of the group " + groupName + "\r\n" + getUsersForGroup(userID, groupID);
+			return "You are already part of the group " + groupName + "\r\n\r\nUsers:\r\n" + getUsersForGroup(userID, groupID);
 		}
 	}
 
@@ -379,11 +397,12 @@ public class Model {
 		return toPrint;
 	}
 	
-	public String listUsers() {
+	public String listUsers(int groupID) {
 		TableHelper table = new TableHelper();
 		table.addRow("ID", "Username");
 		
-		List<Map<String, String>> users = getListOfResults("SELECT * FROM users", "id", "username");
+		List<Map<String, String>> users = getListOfResults("SELECT * FROM users WHERE id in (SELECT userID FROM usersInGroups "
+				+ "WHERE groupID = " + groupID + ")", "id", "username");
 		
 		for (Map<String, String> user : users) {
 			table.addRow(user.get("id"), user.get("username"));
@@ -392,15 +411,20 @@ public class Model {
 		return table.toString();
 	}
 	
-	public Model() {
-		/*try {
-			factory = new Configuration().configure().buildSessionFactory();
-		} catch (HibernateException e) {
-			System.out.println("Encountered error attempting to create factory: " + e.getMessage());
-			e.printStackTrace();
-			throw new ExceptionInInitializerError(e);
-		}*/
+	public String getGroupID(String groupIdentifier) {
+		if (groupIdentifier.matches("\\d+")) {
+			// to verify that group exists, return empty string otherwise
+			return getString("SELECT id FROM groups WHERE id = " + groupIdentifier);
+		} else {
+			List<Integer> idList = getListOfIntegerResults("SELECT id FROM groups WHERE name = '" + groupIdentifier + "'", "id");
+			if (idList.size() != 1) {
+				return "";
+			} else {
+				return idList.get(0) + "";
+			}
+		}
 	}
-
+	
+	public Model() {}
 	
 }

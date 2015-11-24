@@ -19,8 +19,8 @@ You may use any of the following commands:
 		group_id		The ID to the group you wish to join.
 		group_name		The name of the group you wish to join
 	
-	grouppost group_id|group_name "subject" "content"
-		Post a new message to a group with the subject and the content, the subject and the content should be wrapped within double quotes ("").
+	grouppost group_id|group_name subject | content
+		Post a new message to a group with the subject and the content, the subject and the content should be separated by a pipe (|) character.
 		
 		Arguments:
 		group_id		The group to which you would like to post, you are required to be a member of that group.
@@ -49,6 +49,13 @@ You may use any of the following commands:
 		group_id		The group ID that contains the message you would like to view.
 		group_name		Used instead of the group ID as the name of the group that contains the message you would like to view.
 		message_id		The ID of the message you wish to view.
+		
+	grouplistmessages group_id|group_name
+		Lists the messages within a group up to the last two messages posted prior to your most recent joining the group.
+		
+		Arguments:
+		group_id		The group ID whose messages you would like to view
+		group_name		Used instead of the group ID as the name of the group whose messages you would like to view.
 		
 	exit
 		Disconnect from the server and close the client.

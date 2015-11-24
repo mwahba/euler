@@ -1,5 +1,6 @@
 package networking.projecttwo;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -52,13 +53,19 @@ public class TableHelper {
  
         int[] colWidths = colWidths();
  
-        for(String[] row : rows) {
-            for(int colNum = 0; colNum < row.length; colNum++) {
+        Iterator<String[]> rowIterator = rows.iterator();
+        
+        while (rowIterator.hasNext()) {
+        	String[] row = rowIterator.next();
+        	for(int colNum = 0; colNum < row.length; colNum++) {
                 buf.append(
                     rightPad(row[colNum], colWidths[colNum]));
                 buf.append(' ');
             }
-            buf.append('\r').append('\n');
+        	
+        	if (rowIterator.hasNext()) {
+        		buf.append('\r').append('\n');
+        	}
         }
  
         return buf.toString();

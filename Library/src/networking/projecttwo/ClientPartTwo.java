@@ -10,15 +10,15 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.StringTokenizer;
 
-public class ClientPartOne {
+public class ClientPartTwo {
 	static String host = "localhost";
 	static int port = 6789;
-	static int groupID = 1;
 	static String errorResponse = "There was an issue with your request, please try again or see help for further assistance.";
 
 	private static Socket socket;
 	private static PrintWriter request;
 	private static BufferedReader response;
+	private static BufferedReader sysIn;
 	
 	private static void outputHelpContent() {
 		try {
@@ -60,12 +60,31 @@ public class ClientPartOne {
 		return serverResponse;
 	}
 	
+	private static String getGroupID(String groupName) throws IOException {
+		int groupID = 0;
+		boolean processGroupName = true;
+		while (processGroupName) {
+			request.println("groupID");
+			validateResponse(readFromServer(), "groupName", groupName);
+			String serverResponse = readFromServer().replace("|", "");
+			if (serverResponse.length() > 0) {
+				groupID = Integer.parseInt(serverResponse);
+				processGroupName = false;
+			} else {
+				System.out.print("Invalid Group ID or Name entered, please input group ID or name: ");
+				groupName = sysIn.readLine();
+			}
+		}
+		
+		return groupID + "";
+	}
+	
 	public static void main(String[] args) {
 		String userInput;
-		BufferedReader sysIn = new BufferedReader(new InputStreamReader(System.in));
+		sysIn = new BufferedReader(new InputStreamReader(System.in));
 		
 		try {
-			System.out.print("Command: ");
+			System.out.print("Command ('connect host port', 'help', or 'exit'): ");
 			userInput = sysIn.readLine();
 			
 			while (!userInput.startsWith("connect") || userInput.startsWith("help")) {
@@ -75,6 +94,7 @@ public class ClientPartOne {
 				
 				if (userInput.equalsIgnoreCase("exit")) {
 					sysIn.close();
+					System.out.println("Goodbye");
 					return;
 				}
 				
@@ -102,7 +122,7 @@ public class ClientPartOne {
 				
 				// login
 				if ((readFromServer()).equals("username")) {
-					System.out.print("Enter username: ");
+					System.out.print("\r\nEnter username: ");
 					while((userInput = sysIn.readLine()) == null || userInput.length() < 1) {
 						System.out.print("Username was empty, please enter a valid username.");
 					}
@@ -116,37 +136,59 @@ public class ClientPartOne {
 					return;
 				}
 				
+				request.println("groups");
+				print("Some groups on this server:\r\n" + readFromServer());
+				
+				String[] userInputArray;
+				
 				do {
 					System.out.print("Enter command or help: ");
-					userInput = sysIn.readLine().trim();
-					String[] userInputArray = userInput.split(" ", 2);
+					userInput = sysIn.readLine();
+					userInputArray = userInput.split(" ", 3);
 					
 					switch(userInputArray[0].toLowerCase()) {
+					case "groupjoin":
 					case "join":
+						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.println("join");
-						validateResponse(readFromServer(), "groupID", groupID + "");
+						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
+					case "grouppost":
 					case "post":
+						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.println("post");
-						validateResponse(readFromServer(), "groupID", groupID + "");
-						validateResponse(readFromServer(), "subject", userInputArray[1].split("\\|")[0]);
-						validateResponse(readFromServer(), "content", userInputArray[1].split("\\|", 2)[1]);
+						validateResponse(readFromServer(), "groupID", userInputArray[1]);
+						validateResponse(readFromServer(), "subject", userInputArray[2].split("\\|")[0]);
+						validateResponse(readFromServer(), "content", userInputArray[2].split("\\|", 2)[1]);
 						break;
 						
+					case "groupusers":
 					case "users":
+						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.println("users");
-						validateResponse(readFromServer(), "groupID", groupID + "");
+						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
+					case "groupleave":
 					case "leave":
+						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.println("leave");
-						validateResponse(readFromServer(), "groupID", groupID + "");
+						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
+					case "groupmessage":
 					case "message":
+						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.println("message");
 						validateResponse(readFromServer(), "messageID", userInputArray[1]);
+						break;
+						
+					case "grouplistmessages":
+					case "listmessages":
+						userInputArray[1] = getGroupID(userInputArray[1]);
+						request.println("listmessages");
+						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
 					case "exit":
@@ -158,12 +200,12 @@ public class ClientPartOne {
 						break;
 					
 					default:
-						request.println("Unknown command found. Please use 'help' for further assistance.");
-						request.println("unknown");
+						System.out.println("Unknown command was entered. Please use 'help' for further assistance.\r\n");
+						userInputArray[0] = "unknown";
 						break;
 					}
 					
-					if (!userInputArray[0].toLowerCase().startsWith("help")) {
+					if (!userInputArray[0].toLowerCase().startsWith("help") && !userInputArray[0].equals("unknown")) {
 						print(readFromServer());
 					}
 				} while (!userInput.startsWith("exit"));/**/
