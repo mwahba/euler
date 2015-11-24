@@ -154,40 +154,46 @@ public class ClientPartTwo {
 					switch(userInputArray[0].toLowerCase()) {
 					case "groupjoin":
 					case "join":
+						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.println("join");
-						validateResponse(readFromServer(), "groupID", getGroupID(userInputArray[1]));
+						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
 					case "grouppost":
 					case "post":
+						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.println("post");
-						validateResponse(readFromServer(), "groupID", getGroupID(userInputArray[1]));
+						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						validateResponse(readFromServer(), "subject", userInputArray[2].split("\\|")[0]);
 						validateResponse(readFromServer(), "content", userInputArray[2].split("\\|", 2)[1]);
 						break;
 						
 					case "groupusers":
 					case "users":
+						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.println("users");
-						validateResponse(readFromServer(), "groupID", getGroupID(userInputArray[1]));
+						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
 					case "groupleave":
 					case "leave":
+						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.println("leave");
-						validateResponse(readFromServer(), "groupID", getGroupID(userInputArray[1]));
+						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
 					case "groupmessage":
 					case "message":
+						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.println("message");
-						validateResponse(readFromServer(), "messageID", getGroupID(userInputArray[1]));
+						validateResponse(readFromServer(), "messageID", userInputArray[1]);
 						break;
 						
 					case "grouplistmessages":
 					case "listmessages":
+						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.println("listmessages");
-						validateResponse(readFromServer(), "groupID", getGroupID(userInputArray[1]));
+						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
 					case "exit":
