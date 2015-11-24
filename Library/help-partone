@@ -1,0 +1,39 @@
+Welcome to the group client implementation program.
+
+You are required to use the connect command prior to being able to utilize the group features properly.
+You may also access the contents of this help section by using the 'help' command.
+You may exit this client at any time using the 'exit' command.
+
+You may use any of the following commands:
+	connect host_address port_number 
+		Connects to the server.
+		
+		Arguments:
+		host_address	The IP or other valid network identifier of the host you will be connecting to.
+		port_number		The port number on which the host will accept the client connections.
+	
+	join
+		Allows you to join the group.
+	
+	post subject | content
+		Post a new message to the group with the subject and the content, all separated by the pipe (|) character.
+		
+		Arguments:
+		subject			The subject of the post.
+		content			The content of the post.
+		
+	users
+		Retrieve a list of users in the group.
+		
+	leave
+		Leave the group.
+	
+	Message id
+		Retrieve the message content.
+		
+		Arguments:
+		id			The ID of the message you wish to view.
+		
+	exit
+		Disconnect from the server and close the client.
+

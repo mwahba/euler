@@ -56,8 +56,6 @@ final class Request implements Runnable {
 		
 		System.out.println("Client connected: " + socket.getRemoteSocketAddress().toString());
 		
-		os.writeBytes("Enter a username: ");
-		
 		String[] userResult = model.login(trim(br.readLine()));
 		os.writeBytes(userResult[0]);
 		int userID = Integer.parseInt(userResult[1]);
@@ -67,12 +65,9 @@ final class Request implements Runnable {
 		String command;
 		
 		do {
-			os.writeBytes(CRLF + CRLF + "Enter command: ");
 			command = br.readLine();
-			model.updateLastActive(userID);
 			
 			switch (command.toLowerCase()) {
-			case "list":
 			case "groups":
 				os.writeBytes(model.listGroups(userID));
 				break;
@@ -95,7 +90,7 @@ final class Request implements Runnable {
 				os.writeBytes(model.leaveGroup(userID, processInput()));
 				break;
 			
-			case "messages":
+			case "messages messages":
 				os.writeBytes("Group ID: ");
 				os.writeBytes(model.getListOfMessages(userID, processInput()));
 				break;
@@ -117,9 +112,16 @@ final class Request implements Runnable {
 				break;
 				
 			case "exit":
-				model.updateLastActive(userID);
+				break;
+				
+			case "help":
+			default:
+				os.writeBytes("Use one of the following commands: list groups, list messages, list users, join, leave, post, updates, view");
 				break;
 			}
+			
+			model.updateLastActive(userID);
+			
 		} while (!command.equalsIgnoreCase("exit"));
 		
 		System.out.println("Client disconnected: " + socket.getRemoteSocketAddress().toString());

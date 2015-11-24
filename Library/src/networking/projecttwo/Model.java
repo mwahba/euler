@@ -196,13 +196,13 @@ public class Model {
 		List<Map<String, String>> joined = getListOfResults("SELECT users.username, users.id, groups.name, groups.id FROM users, groups, "
 				+ "usersInGroups WHERE usersInGroups.joined >=" + statement, "users.username", "users.id", "groups.name", "groups.id");
 		
-		List<Map<String, String>> left = getListOfResults("SELECT users.username, groups.name FROM users, groupID, "
-				+ "usersInGroups WHERE usersInGroups.left >= " + statement, "users.username", "groups.name");
+		List<Map<String, String>> left = getListOfResults("SELECT users.username, groups.name FROM users, groups, "
+				+ "usersInGroups WHERE usersInGroups.leftDate >= " + statement, "users.username", "groups.name");
 		
-		List<Map<String, String>> posted = getListOfResults("SELECT * FROM messages WHERE groupID in (SELECT groupID FROM usersInGroups "
-				+ "WHERE userID = " + id + ") and posted > (SELECT lastActive FROM users WHERE id = " + id + ") AND author in (SELECT "
-						+ "userID FROM usersInGroups where userID = " + id + " AND leftDate = 0)", 
-						"users.username", "groups.name", "messages.id", "messages.title");
+		List<Map<String, String>> posted = getListOfResults("SELECT messages.id, messages.userID, messages.groupID, messages.subject "
+				+ "FROM messages, users, groups WHERE groupID in (SELECT groupID FROM usersInGroups WHERE userID = " + id + ") and "
+				+ "posted > (SELECT lastActive FROM users WHERE id = " + id + ") AND userID in (SELECT userID FROM usersInGroups "
+				+ "WHERE userID = " + id + " AND leftDate = 0)", "userID", "groupID", "id", "subject");
 		
 		if (joined.size() > 0 || left.size() > 0 || posted.size() > 0) {
 			toPrint += "The following updates have occurred since you were last active: ";
@@ -220,10 +220,10 @@ public class Model {
 			
 			if (posted.size() > 0) {
 				for (Map<String, String> message : posted) {
-					String username = getUserName(Integer.parseInt(message.get("author"))), 
+					String username = getUserName(Integer.parseInt(message.get("userID"))), 
 							groupName = getGroupName(Integer.parseInt(message.get("groupID")));
-					toPrint += username + "(" + message.get("author") + " posted a new message in " + groupName + "(" + message.get("group") 
-							+ ": " + message.get("subject") + " (" + message.get("id") + ")\r\n";
+					toPrint += username + " (" + message.get("userID") + ") posted a new message in " + groupName + "(" + message.get("groupID") 
+							+ "): " + message.get("subject") + " (" + message.get("id") + ")\r\n";
 				}
 			}
 		} else {
@@ -241,7 +241,7 @@ public class Model {
 		
 		List<Map<String, String>> groups = getListOfResults("SELECT * FROM groups LIMIT 0,5", "id", "name");
 		List<Integer> currentlyJoined = getListOfIntegerResults("SELECT groupID FROM usersInGroups WHERE userID = " + id 
-				+ " AND leftDate = 0;", "group");
+				+ " AND leftDate = 0;", "groupID");
 		
 		for (Map<String, String> group : groups) {
 			if (currentlyJoined.contains(Integer.parseInt(group.get("id")))) {
@@ -310,17 +310,17 @@ public class Model {
 			TableHelper table = new TableHelper();
 			table.addRow("Message ID", "Sender", "Post Date", "Subject");
 			
-			List<Map<String, String>> messages = getListOfResults("SELECT id, author, posted, subject FROM messages WHERE posted >= "
+			List<Map<String, String>> messages = getListOfResults("SELECT id, userID, posted, subject FROM messages WHERE posted >= "
 					+ "(SELECT joined FROM usersInGroups WHERE userID = " + userID + " and groupID = " + groupID 
-					+ ") ORDER by posted DESC;", "id", "author", "posted", "subject");
+					+ ") ORDER by posted DESC;", "id", "userID", "posted", "subject");
 			
-			messages.addAll(getListOfResults("SELECT id, author, posted, subject FROM messages WHERE posted < (SELECT joined FROM "
+			messages.addAll(getListOfResults("SELECT id, userID, posted, subject FROM messages WHERE posted < (SELECT joined FROM "
 					+ "usersInGroups WHERE userID = " + userID + " and groupID = " + groupID + ") ORDER by posted DESC LIMIT 0,2;",
-					"id", "author", "posted", "subject"));
+					"id", "userID", "posted", "subject"));
 			
 			if (messages.size() > 0) {
 				for (Map<String, String> message : messages) {
-					table.addRow(message.get("id"), message.get("author"), message.get("posted"), message.get("subject"));
+					table.addRow(message.get("id"), message.get("userID"), message.get("posted"), message.get("subject"));
 				}
 				result = table.toString();
 			} else {
@@ -338,7 +338,7 @@ public class Model {
 		String result;
 		
 		if (isUserInGroup(userID, groupID)) {
-			if (executeUpdate("INSERT INTO messages(author, groupID, subject, content, posted) VALUES (" + userID + ", " 
+			if (executeUpdate("INSERT INTO messages(userID, groupID, subject, content, posted) VALUES (" + userID + ", " 
 					+ groupID + ", '" + subject + "', '" + content + "', NOW())")) {
 				result = "Your message has been posted successfully to " + getGroupName(groupID) + "\r\n" 
 						+ getListOfMessages(userID, groupID);
@@ -361,12 +361,12 @@ public class Model {
 		
 		// check proper permissions to read message
 		if (isUserInGroup(userID, groupID)) {
-			List<Map<String, String>> message = getListOfResults("SELECT author, subject, content, posted FROM messages WHERE id = " 
-					+ messageID, "author", "subject", "content", "posted");
+			List<Map<String, String>> message = getListOfResults("SELECT userID, subject, content, posted FROM messages WHERE id = " 
+					+ messageID, "userID", "subject", "content", "posted");
 			
 			if (message.size() > 0) {
 				toPrint += "Subject: " + message.get(0).get("subject") + "\r\n"
-						+ "Author: " + message.get(0).get("author") + "\r\n"
+						+ "Author: " + message.get(0).get("userID") + "\r\n"
 						+ "Posted: " + message.get(0).get("posted") + "\r\n"
 						+ "Content: " + message.get(0).get("content");
 			} else {

@@ -33,7 +33,7 @@ CREATE TABLE messages (
 );
 
 usersInGroups: userID, groupID, joined, leftDate
-CREATE TABLE userInGroup (
+CREATE TABLE usersInGroups (
 	userID int,
 	groupID int,
 	joined timestamp,

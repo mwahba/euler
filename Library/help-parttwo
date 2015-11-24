@@ -1,0 +1,55 @@
+Welcome to the group client implementation program.
+
+You are required to use the connect command prior to being able to utilize the group features properly.
+You may also access the contents of this help section by using the 'help' command.
+You may exit this client at any time using the 'exit' command.
+
+You may use any of the following commands:
+	connect host_address port_number 
+		Connects to the server.
+		
+		Arguments:
+		host_address	The IP or other valid network identifier of the host you will be connecting to.
+		port_number		The port number on which the host will accept the client connections.
+	
+	groupjoin group_id|group_name
+		Allows you to join the group.
+		
+		Arguments:
+		group_id		The ID to the group you wish to join.
+		group_name		The name of the group you wish to join
+	
+	grouppost group_id|group_name "subject" "content"
+		Post a new message to a group with the subject and the content, the subject and the content should be wrapped within double quotes ("").
+		
+		Arguments:
+		group_id		The group to which you would like to post, you are required to be a member of that group.
+		group_name		Used instead of the group ID as the name of the group you would like to post to.
+		subject			The subject of the post.
+		content			The content of the post.
+		
+	groupusers group_id|group_name
+		Retrieve a list of users in the group.
+		
+		Arguments:
+		group_id		The Group ID for which you would like to see the list of users.
+		group_name		Used instead of the group ID as the name of the group you would like to see the list of users.
+		
+	groupleave group_id|group_name
+		Leave the group.
+		
+		Arguments:
+		group_id		The group ID for the group you would like to leave.
+		group_name		Used instead of the group ID as the name of the group you would like to leave.
+	
+	groupmessage group_id|group_name message_id
+		Retrieve the message content.
+		
+		Arguments:
+		group_id		The group ID that contains the message you would like to view.
+		group_name		Used instead of the group ID as the name of the group that contains the message you would like to view.
+		message_id		The ID of the message you wish to view.
+		
+	exit
+		Disconnect from the server and close the client.
+
