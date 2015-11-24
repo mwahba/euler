@@ -211,7 +211,8 @@ public class ClientPartTwo {
 					}
 					
 					// if the user's command input was not help or something unknown
-					if (!userInputArray[0].toLowerCase().startsWith("help") && !userInputArray[0].equals("unknown")) {
+					if (!userInputArray[0].toLowerCase().startsWith("help") && !userInputArray[0].equals("unknown") 
+							&& !userInputArray[0].toLowerCase().startsWith("exit")) {
 						// print out the server response
 						print(readFromServer());
 						
