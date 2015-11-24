@@ -69,7 +69,7 @@ public class TableHelper {
             }
         	
         	if (rowIterator.hasNext()) {
-        		buf.append('\r').append('\n');
+        		buf.append("\r\n");
         	}
         }
  

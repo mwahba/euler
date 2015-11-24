@@ -84,13 +84,14 @@ final class Request implements Runnable {
 		String[] userResult = model.login(username);
 		int userID = Integer.parseInt(userResult[1]);
 		out.println(response(userResult[0] + model.checkUpdates(userID)));
+		model.updateLastActive(userID);
 		
 		String command;
 		
 		do {
-			command = br.readLine().toLowerCase();
+			command = br.readLine();
 			System.out.println("User " + username + " (" + userID + ") processing command: " + command);
-			switch (command) {
+			switch (command.split(" ")[0].toLowerCase()) {
 			case "groups":
 				out.println(response(model.listGroups(userID)));
 				break;
@@ -137,8 +138,13 @@ final class Request implements Runnable {
 				break;
 				
 			case "groupid":
-				out.println("groupName");
-				String groupName = trim(readFromClient());
+				String groupName;
+				if (command.split(" ").length == 1) {
+					out.println("groupName");
+					groupName = trim(readFromClient());
+				} else {
+					groupName = command.split(" ")[1];
+				}
 				out.println(response(model.getGroupID(groupName)));
 				break;
 				

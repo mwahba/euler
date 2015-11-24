@@ -195,7 +195,7 @@ public class Model {
 	}
 
 	public String checkUpdates(int id) {
-		String toPrint = "\r\n";
+		String toPrint = "";
 		
 		// get the date the user was last active
 		String lastActive = getString("SELECT DATE_FORMAT(lastActive, '%Y-%c-%d %H:%i:%s') FROM users WHERE id = " + id);
@@ -213,15 +213,15 @@ public class Model {
 		for (int userGroup : userGroups) {
 			// find any users who have joined the group
 			joined.addAll(getListOfResults("SELECT userID, groupID FROM usersInGroups WHERE joined > STR_TO_DATE('" + lastActive 
-					+ "', '%Y-%c-%d %H:%i:%s') AND groupID = " + userGroup, "userID", "groupID"));
+					+ "', '%Y-%c-%d %H:%i:%s') AND groupID = " + userGroup + " AND userID != " + id, "userID", "groupID"));
 			
 			// find any users who have left the group
 			left.addAll(getListOfResults("SELECT userID, groupID FROM usersInGroups WHERE leftDate > STR_TO_DATE('" + lastActive 
-					+ "', '%Y-%c-%d %H:%i:%s') AND groupID = " + userGroup, "userID", "groupID"));
+					+ "', '%Y-%c-%d %H:%i:%s') AND groupID = " + userGroup + " AND userID != " + id, "userID", "groupID"));
 			
 			// find the messages posted following the last active date, add them to 'posted'
 			posted.addAll(getListOfResults("SELECT id, userID, groupID, subject FROM messages WHERE posted > STR_TO_DATE('" + lastActive 
-					+ "', '%Y-%c-%d %H:%i:%s') AND groupID = " + userGroup, "id", "userID", "groupID", "subject"));
+					+ "', '%Y-%c-%d %H:%i:%s') AND groupID = " + userGroup + " AND userID != " + id, "id", "userID", "groupID", "subject"));
 		}
 		
 		// If there are any updates
@@ -334,11 +334,11 @@ public class Model {
 			
 			List<Map<String, String>> messages = getListOfResults("SELECT id, userID, posted, subject FROM messages WHERE posted >= "
 					+ "(SELECT joined FROM usersInGroups WHERE userID = " + userID + " and groupID = " + groupID 
-					+ ") ORDER by posted DESC;", "id", "userID", "posted", "subject");
+					+ ") AND groupID = " + groupID + " ORDER by posted DESC", "id", "userID", "posted", "subject");
 			
 			messages.addAll(getListOfResults("SELECT id, userID, posted, subject FROM messages WHERE posted < (SELECT joined FROM "
-					+ "usersInGroups WHERE userID = " + userID + " and groupID = " + groupID + ") ORDER by posted DESC LIMIT 0,2;",
-					"id", "userID", "posted", "subject"));
+					+ "usersInGroups WHERE userID = " + userID + " and groupID = " + groupID + ") AND groupID = " + groupID 
+					+ " ORDER by posted DESC LIMIT 0,2", "id", "userID", "posted", "subject"));
 			
 			if (messages.size() > 0) {
 				for (Map<String, String> message : messages) {
