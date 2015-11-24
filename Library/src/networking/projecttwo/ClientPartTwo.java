@@ -71,7 +71,6 @@ public class ClientPartTwo {
 		boolean processGroupName = true;
 		while (processGroupName) {
 			request.println("groupid " + groupName);
-			validateResponse(readFromServer(), "groupName", groupName);
 			String serverResponse = readFromServer().replace("|", "");
 			if (serverResponse.length() > 0) {
 				groupID = Integer.parseInt(serverResponse);
