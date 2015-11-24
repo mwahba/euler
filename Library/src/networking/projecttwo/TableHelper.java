@@ -5,10 +5,15 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
+ * /**
+ * CSE 5461 - Mark Wahba (wahba.2@osu.edu) - Programming Assignment 2
+ * TableHelper - provide properly spaced output.
+ * Please read README for more information.
+ * 
  * Code based on TableBuilder code available from ksmpartners.com, appears in article authored by Michael Schaeffer (8/6/2013)
  * http://www.ksmpartners.com/2013/08/nicely-formatted-tabular-output-in-java/
  * 
- * @author Mark Wahba
+ * @author Mark Wahba (wahba.2@osu.edu)
  */
 public class TableHelper {
     List<String[]> rows = new LinkedList<String[]>();

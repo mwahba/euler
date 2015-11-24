@@ -10,6 +10,12 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.StringTokenizer;
 
+/**
+ * CSE 5461 - Mark Wahba (wahba.2@osu.edu) - Programming Assignment 2
+ * ClientPartOne - implementation for first part of project.
+ * Please read README for more information.
+ * @author Mark Wahba (wahba.2@osu.edu)
+ */
 public class ClientPartOne {
 	static String host = "localhost";
 	static int port = 6789;

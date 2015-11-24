@@ -10,6 +10,12 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.StringTokenizer;
 
+/**
+ * CSE 5461 - Mark Wahba (wahba.2@osu.edu) - Programming Assignment 2
+ * ClientPartTwo - client implementation.
+ * Please read README for more information.
+ * @author Mark Wahba (wahba.2@osu.edu)
+ */
 public class ClientPartTwo {
 	static String host = "localhost";
 	static int port = 6789;
@@ -22,7 +28,7 @@ public class ClientPartTwo {
 	
 	private static void outputHelpContent() {
 		try {
-			File file = new File("help-partone");
+			File file = new File("help-parttwo");
 	        BufferedReader buffer = new BufferedReader(new FileReader(file));
 	        
 	        while (buffer.ready()) {
@@ -64,7 +70,7 @@ public class ClientPartTwo {
 		int groupID = 0;
 		boolean processGroupName = true;
 		while (processGroupName) {
-			request.println("groupID");
+			request.println("groupid");
 			validateResponse(readFromServer(), "groupName", groupName);
 			String serverResponse = readFromServer().replace("|", "");
 			if (serverResponse.length() > 0) {
@@ -205,7 +211,13 @@ public class ClientPartTwo {
 						break;
 					}
 					
+					// if the user's command input was not help or something unknown
 					if (!userInputArray[0].toLowerCase().startsWith("help") && !userInputArray[0].equals("unknown")) {
+						// print out the server response
+						print(readFromServer());
+						
+						// print out updates and update last active date
+						request.println("updates");
 						print(readFromServer());
 					}
 				} while (!userInput.startsWith("exit"));/**/

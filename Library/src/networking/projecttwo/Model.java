@@ -10,6 +10,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * CSE 5461 - Mark Wahba (wahba.2@osu.edu) - Programming Assignment 2
+ * Model - implementation for database interface. Acting as business object.
+ * Please read README for more information.
+ * @author Mark Wahba (wahba.2@osu.edu)
+ */
 public class Model {
 	
 	private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver",
@@ -246,8 +252,6 @@ public class Model {
 							+ "): " + message.get("subject") + " (" + message.get("id") + ")";
 				}
 			}
-		} else { // if there were no updates
-			toPrint = "No new updates have occurred since you were last active.";
 		}
 		
 		return toPrint;

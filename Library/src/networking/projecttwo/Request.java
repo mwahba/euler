@@ -7,6 +7,12 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+/**
+ * CSE 5461 - Mark Wahba (wahba.2@osu.edu) - Programming Assignment 2
+ * Request - Implementation for request established from listening server.
+ * Please read README for more information.
+ * @author Mark Wahba (wahba.2@osu.edu)
+ */
 final class Request implements Runnable {
 	final static String CRLF = "\r\n", USERNAME = "user", PASSWORD = "password",
 			LOGIN = "login";
@@ -77,7 +83,7 @@ final class Request implements Runnable {
 		System.out.println(username + " logging in.");
 		String[] userResult = model.login(username);
 		int userID = Integer.parseInt(userResult[1]);
-		out.println(response(userResult[0] + "\r\n" + model.checkUpdates(userID)));
+		out.println(response(userResult[0] + model.checkUpdates(userID)));
 		
 		String command;
 		
@@ -91,6 +97,7 @@ final class Request implements Runnable {
 				
 			case "updates":
 				out.println(response(model.checkUpdates(userID)));
+				model.updateLastActive(userID);
 				break;
 			
 			case "users":
@@ -142,7 +149,6 @@ final class Request implements Runnable {
 			default:
 				break;
 			}
-			
 		} while (!command.equalsIgnoreCase("exit"));
 		
 		System.out.println("Client disconnected: " + socket.getRemoteSocketAddress().toString());

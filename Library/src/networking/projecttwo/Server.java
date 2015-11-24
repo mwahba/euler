@@ -4,6 +4,12 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+/**
+ * CSE 5461 - Mark Wahba (wahba.2@osu.edu) - Programming Assignment 2
+ * Server - always listening for new connections coming in. Based on implementation from Programming Assignment 1.
+ * Please read README for more information.
+ * @author Mark Wahba (wahba.2@osu.edu)
+ */
 public class Server {
 private static int PORT = 6789;
 	
