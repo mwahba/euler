@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.Map;
 
 /**
  * CSE 5461 - Mark Wahba (wahba.2@osu.edu) - Programming Assignment 2
@@ -23,6 +24,8 @@ final class Request implements Runnable {
 	DataOutputStream out;
 	static BufferedReader br;
 	
+	Map<String, Integer> groupIDs;
+	
 	//Constructor
 	public Request(Socket socket) throws Exception {
 		this.socket = socket;
@@ -31,27 +34,6 @@ final class Request implements Runnable {
 	
 	private String trim(String string) {
 		return string.replaceAll("[^A-Za-z0-9]", "");
-	}
-	
-	private int processInput() {
-		int result = -1;
-		
-		String input;
-		try {
-			input = br.readLine().replaceAll("[^0-9]", "");
-			
-			while (input.length() < 1) {
-				out.writeBytes("The input was invalid, please try again: ");
-				input = br.readLine().replaceAll("[^0-9]", "");
-			}
-			
-			result = Integer.parseInt(input);
-		} catch (IOException e) {
-			System.out.println("Unable to get proper input String.");
-			e.printStackTrace();
-		}
-		
-		return result;
 	}
 	
 	private static String readFromClient() throws IOException {
@@ -74,6 +56,14 @@ final class Request implements Runnable {
 		out.writeBytes(toSendBack + "\r\n");
 	}
 	
+	private int getGroupID(String groupName) {
+		if (groupIDs.containsKey(groupName)) {
+			return groupIDs.get(groupName);
+		} else if (groupIDs.containsValue(groupName)) {
+			return Integer.parseInt(groupName);
+		}
+		return 0;
+	}
 	private void processRequest() throws Exception {
 		// Get a reference to the socket's input and output streams
 		InputStream is = socket.getInputStream();
@@ -92,6 +82,8 @@ final class Request implements Runnable {
 		
 		String command;
 		
+		groupIDs = model.getGroupIDs();
+		
 		do {
 			command = br.readLine();
 			System.out.println("User " + username + " (" + userID + ") processing command: " + command);
@@ -107,27 +99,27 @@ final class Request implements Runnable {
 			
 			case "users":
 				reply("groupID");
-				reply(response(model.listUsers(processInput())));
+				reply(response(model.listUsers(getGroupID(readFromClient()))));
 				break;
 				
 			case "join":
 				reply("groupID");
-				reply(response(model.joinGroup(userID, processInput())));
+				reply(response(model.joinGroup(userID, getGroupID(readFromClient()))));
 				break;
 				
 			case "leave":
 				reply("groupID");
-				reply(response(model.leaveGroup(userID, processInput())));
+				reply(response(model.leaveGroup(userID, getGroupID(readFromClient()))));
 				break;
 			
 			case "listmessages":
 				reply("groupID");
-				reply(response(model.getListOfMessages(userID, processInput())));
+				reply(response(model.getListOfMessages(userID, getGroupID(readFromClient()))));
 				break;
 				
 			case "post":
 				reply("groupID");
-				int groupID = processInput();
+				int groupID = getGroupID(readFromClient());
 				reply("subject");
 				String subject = readFromClient();
 				reply("content");
@@ -142,12 +134,11 @@ final class Request implements Runnable {
 				break;
 				
 			case "groupid":
-				String groupName;
-				if (command.split(" ").length == 1) {
-					reply("Issue occurred with finding group ID command.");
-				} else {
-					groupName = command.split(" ")[1];
-					reply(model.getGroupID(groupName));
+				String groupName = command.split(" ")[1];
+				if (groupIDs.containsKey(groupName)) {
+					reply(groupIDs.get(groupName) + "");
+				} else if (groupIDs.containsValue(groupName)) {
+					reply(groupName);
 				}
 				break;
 				

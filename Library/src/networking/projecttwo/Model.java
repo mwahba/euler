@@ -415,18 +415,14 @@ public class Model {
 		return table.toString();
 	}
 	
-	public String getGroupID(String groupIdentifier) {
-		if (groupIdentifier.matches("\\d+")) {
-			// to verify that group exists, return empty string otherwise
-			return getString("SELECT id FROM groups WHERE id = " + groupIdentifier);
-		} else {
-			List<Integer> idList = getListOfIntegerResults("SELECT id FROM groups WHERE name = '" + groupIdentifier + "'", "id");
-			if (idList.size() != 1) {
-				return "0";
-			} else {
-				return idList.get(0) + "";
-			}
+	public Map<String, Integer> getGroupIDs() {
+		List<Map<String, String>> groupIDResults = getListOfResults("SELECT id, name FROM groups", "id", "name");
+		Map<String, Integer> groupIDs = new HashMap<String, Integer>();
+		for (Map<String, String> groupInfo : groupIDResults) {
+			groupIDs.put(groupInfo.get("name"), Integer.parseInt(groupInfo.get("id")));
 		}
+		
+		return groupIDs;
 	}
 	
 	public Model() {}

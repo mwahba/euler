@@ -66,24 +66,6 @@ public class ClientPartTwo {
 		return serverResponse;
 	}
 	
-	private static String getGroupID(String groupName) throws IOException {
-		int groupID = 0;
-		boolean processGroupName = true;
-		while (processGroupName) {
-			request.writeBytes("groupid " + groupName + "\r\n");
-			String serverResponse = readFromServer().replace("|", "");
-			if (serverResponse.length() > 0) {
-				groupID = Integer.parseInt(serverResponse);
-				processGroupName = false;
-			} else {
-				System.out.print("Invalid Group ID or Name entered, please input group ID or name: ");
-				groupName = sysIn.readLine();
-			}
-		}
-		
-		return groupID + "";
-	}
-	
 	private static String prep(String toSend) {
 		return toSend.replace("'", "\'");
 	}
@@ -158,14 +140,12 @@ public class ClientPartTwo {
 					switch(userInputArray[0].toLowerCase()) {
 					case "groupjoin":
 					case "join":
-						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.writeBytes("join" + "\r\n");
 						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
 					case "grouppost":
 					case "post":
-						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.writeBytes("post" + "\r\n");
 						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						validateResponse(readFromServer(), "subject", prep(userInputArray[2].split("\\|")[0]));
@@ -174,28 +154,24 @@ public class ClientPartTwo {
 						
 					case "groupusers":
 					case "users":
-						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.writeBytes("users" + "\r\n");
 						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
 					case "groupleave":
 					case "leave":
-						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.writeBytes("leave" + "\r\n");
 						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
 					case "groupmessage":
 					case "message":
-						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.writeBytes("message" + "\r\n");
 						validateResponse(readFromServer(), "messageID", userInputArray[1]);
 						break;
 						
 					case "grouplistmessages":
 					case "listmessages":
-						userInputArray[1] = getGroupID(userInputArray[1]);
 						request.writeBytes("listmessages" + "\r\n");
 						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						break;
