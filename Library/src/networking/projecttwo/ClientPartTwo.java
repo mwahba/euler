@@ -1,11 +1,11 @@
 package networking.projecttwo;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.StringTokenizer;
@@ -22,7 +22,7 @@ public class ClientPartTwo {
 	static String errorResponse = "There was an issue with your request, please try again or see help for further assistance.";
 
 	private static Socket socket;
-	private static PrintWriter request;
+	private static DataOutputStream request;
 	private static BufferedReader response;
 	private static BufferedReader sysIn;
 	
@@ -42,9 +42,9 @@ public class ClientPartTwo {
 		}
 	}
 	
-	private static void validateResponse(String serverResponse, String expected, String value) {
+	private static void validateResponse(String serverResponse, String expected, String value) throws IOException {
 		if (serverResponse.equals(expected)) {
-			request.println(value);
+			request.writeBytes(value + "\r\n");
 		} else {
 			System.out.println(errorResponse + "\r\nExpected: " + expected + ", received: " + serverResponse);
 		}
@@ -70,7 +70,7 @@ public class ClientPartTwo {
 		int groupID = 0;
 		boolean processGroupName = true;
 		while (processGroupName) {
-			request.println("groupid " + groupName);
+			request.writeBytes("groupid " + groupName + "\r\n");
 			String serverResponse = readFromServer().replace("|", "");
 			if (serverResponse.length() > 0) {
 				groupID = Integer.parseInt(serverResponse);
@@ -85,7 +85,7 @@ public class ClientPartTwo {
 	}
 	
 	private static String prep(String toSend) {
-		return toSend.replaceAll("'", "\'");
+		return toSend.replace("'", "\'");
 	}
 	
 	public static void main(String[] args) {
@@ -126,7 +126,7 @@ public class ClientPartTwo {
 			
 			try {
 				socket = new Socket(host, port);
-				request = new PrintWriter(socket.getOutputStream(), true);
+				request = new DataOutputStream(socket.getOutputStream());
 				response = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				
 				// login
@@ -136,7 +136,7 @@ public class ClientPartTwo {
 						System.out.print("Username was empty, please enter a valid username.");
 					}
 					// send username to server
-					request.println(userInput);
+					request.writeBytes(userInput + "\r\n");
 					
 					// get login success message
 					print(readFromServer());
@@ -145,7 +145,7 @@ public class ClientPartTwo {
 					return;
 				}
 				
-				request.println("groups");
+				request.writeBytes("groups" + "\r\n");
 				print("Some groups on this server:\r\n" + readFromServer());
 				
 				String[] userInputArray;
@@ -159,14 +159,14 @@ public class ClientPartTwo {
 					case "groupjoin":
 					case "join":
 						userInputArray[1] = getGroupID(userInputArray[1]);
-						request.println("join");
+						request.writeBytes("join" + "\r\n");
 						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
 					case "grouppost":
 					case "post":
 						userInputArray[1] = getGroupID(userInputArray[1]);
-						request.println("post");
+						request.writeBytes("post" + "\r\n");
 						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						validateResponse(readFromServer(), "subject", prep(userInputArray[2].split("\\|")[0]));
 						validateResponse(readFromServer(), "content", prep(userInputArray[2].split("\\|", 2)[1]));
@@ -175,33 +175,33 @@ public class ClientPartTwo {
 					case "groupusers":
 					case "users":
 						userInputArray[1] = getGroupID(userInputArray[1]);
-						request.println("users");
+						request.writeBytes("users" + "\r\n");
 						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
 					case "groupleave":
 					case "leave":
 						userInputArray[1] = getGroupID(userInputArray[1]);
-						request.println("leave");
+						request.writeBytes("leave" + "\r\n");
 						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
 					case "groupmessage":
 					case "message":
 						userInputArray[1] = getGroupID(userInputArray[1]);
-						request.println("message");
+						request.writeBytes("message" + "\r\n");
 						validateResponse(readFromServer(), "messageID", userInputArray[1]);
 						break;
 						
 					case "grouplistmessages":
 					case "listmessages":
 						userInputArray[1] = getGroupID(userInputArray[1]);
-						request.println("listmessages");
+						request.writeBytes("listmessages" + "\r\n");
 						validateResponse(readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
 					case "exit":
-						request.println("exit");
+						request.writeBytes("exit" + "\r\n");
 						print(readFromServer());
 						break;
 						
@@ -222,12 +222,12 @@ public class ClientPartTwo {
 						print(readFromServer());
 						
 						// print out updates and update last active date
-						request.println("updates");
+						request.writeBytes("updates" + "\r\n");
 						print(readFromServer());
 					}
 				} while (!userInput.startsWith("exit"));/**/
 				
-				request.println("exit");
+				request.writeBytes("exit" + "\r\n");
 				
 				System.out.println("Goodbye.");
 				

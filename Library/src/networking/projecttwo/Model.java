@@ -260,7 +260,7 @@ public class Model {
 	public String listGroups(int id) {		
 		TableHelper table = new TableHelper();
 		table.addRow("ID", "Name", "Joined");
-		table.addRow("----", "--------", "---------");
+		table.addRow("----", "--------", "----------------------");
 		List<Map<String, String>> groups = getListOfResults("SELECT * FROM groups LIMIT 0,5", "id", "name");
 		List<Integer> currentlyJoined = getListOfIntegerResults("SELECT groupID FROM usersInGroups WHERE userID = " + id 
 				+ " AND leftDate = 0;", "groupID");
@@ -331,7 +331,7 @@ public class Model {
 		if (isUserInGroup(userID, groupID)) {
 			TableHelper table = new TableHelper();
 			table.addRow("Message ID", "Sender", "Post Date", "Subject");
-			table.addRow("----------", "------------", "--------------", "---------------");
+			table.addRow("----------", "------------", "----------------------", "---------------");
 			List<Map<String, String>> messages = getListOfResults("SELECT id, userID, posted, subject FROM messages WHERE posted >= "
 					+ "(SELECT joined FROM usersInGroups WHERE userID = " + userID + " and groupID = " + groupID 
 					+ ") AND groupID = " + groupID + " ORDER by posted DESC", "id", "userID", "posted", "subject");
