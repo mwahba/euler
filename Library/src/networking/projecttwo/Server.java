@@ -37,6 +37,7 @@ private static int PORT = 6789;
 			
 			// Construct an object to process the HTTP request message.
 			Request request = new Request(clientSocket);
+			//WebSocketRequest request = new WebSocketRequest(clientSocket);
 			
 			// Create a new thread to process the request
 			Thread thread = new Thread(request);

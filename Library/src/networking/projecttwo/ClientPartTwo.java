@@ -1,7 +1,7 @@
 package networking.projecttwo;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -17,14 +17,11 @@ import java.util.StringTokenizer;
  * @author Mark Wahba (wahba.2@osu.edu)
  */
 public class ClientPartTwo {
-	static String host = "localhost";
+	static String host = "172.31.15.162";
 	static int port = 6789;
 	static String errorResponse = "There was an issue with your request, please try again or see help for further assistance.";
-
-	private static Socket socket;
-	private static DataOutputStream request;
-	private static BufferedReader response;
-	private static BufferedReader sysIn;
+	
+	static BufferedReader response;
 	
 	private static void outputHelpContent() {
 		try {
@@ -42,9 +39,9 @@ public class ClientPartTwo {
 		}
 	}
 	
-	private static void validateResponse(String serverResponse, String expected, String value) throws IOException {
+	private static void validateResponse(BufferedOutputStream request, String serverResponse, String expected, String value) throws IOException {
 		if (serverResponse.equals(expected)) {
-			request.writeBytes(value + "\r\n");
+			writeToServer(request, value);
 		} else {
 			System.out.println(errorResponse + "\r\nExpected: " + expected + ", received: " + serverResponse);
 		}
@@ -56,6 +53,7 @@ public class ClientPartTwo {
 	
 	private static String readFromServer() throws IOException {
 		boolean wait = true;
+		
 		String serverResponse = "";
 		while (wait) {
 			if ((serverResponse = response.readLine()).length() > 0) {
@@ -66,13 +64,18 @@ public class ClientPartTwo {
 		return serverResponse;
 	}
 	
+	private static void writeToServer(BufferedOutputStream request, String toWrite) throws IOException {		
+		request.write((toWrite + "\r\n").getBytes());
+		request.flush();
+	}
+	
 	private static String prep(String toSend) {
 		return toSend.replace("'", "\'");
 	}
 	
 	public static void main(String[] args) {
 		String userInput;
-		sysIn = new BufferedReader(new InputStreamReader(System.in));
+		BufferedReader sysIn = new BufferedReader(new InputStreamReader(System.in));
 		
 		try {
 			System.out.print("Command ('connect host port', 'help', or 'exit'): ");
@@ -101,14 +104,20 @@ public class ClientPartTwo {
 			tokens.nextToken(); // skipping over connect
 			if (tokens.hasMoreTokens()) {
 				host = tokens.nextToken();
-				port = Integer.parseInt(tokens.nextToken());
+				if (tokens.hasMoreTokens()) {
+					port = Integer.parseInt(tokens.nextToken());
+				} else {
+					System.out.println("You did not specify a port, please enter a port number: ");
+					userInput = sysIn.readLine();
+					port = Integer.parseInt(userInput);
+				}
 			} else {
 				System.out.println("Will connect using the default host: " + host + " and port: " + port);
 			}
 			
 			try {
-				socket = new Socket(host, port);
-				request = new DataOutputStream(socket.getOutputStream());
+				Socket socket = new Socket(host, port);
+				BufferedOutputStream request = new BufferedOutputStream(socket.getOutputStream());
 				response = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				
 				// login
@@ -118,16 +127,19 @@ public class ClientPartTwo {
 						System.out.print("Username was empty, please enter a valid username: ");
 					}
 					// send username to server
-					request.writeBytes(userInput + "\r\n");
+					writeToServer(request, userInput);
 					
 					// get login success message
 					print(readFromServer());
 				} else {
 					System.out.println("There was an error with the server response. Please contact the administrator.");
+					request.close();
+					response.close();
+					socket.close();
 					return;
 				}
 				
-				request.writeBytes("groups" + "\r\n");
+				writeToServer(request, "groups");
 				print("Some groups on this server:\r\n" + readFromServer());
 				
 				String[] userInputArray;
@@ -140,44 +152,49 @@ public class ClientPartTwo {
 					switch(userInputArray[0].toLowerCase()) {
 					case "groupjoin":
 					case "join":
-						request.writeBytes("join" + "\r\n");
-						validateResponse(readFromServer(), "groupID", userInputArray[1]);
+						writeToServer(request, "join");
+						validateResponse(request, readFromServer(), "groupID", userInputArray[1]);
+						break;
+						
+					case "groups":
+					case "listgroups":
+						writeToServer(request, "groups");
 						break;
 						
 					case "grouppost":
 					case "post":
-						request.writeBytes("post" + "\r\n");
-						validateResponse(readFromServer(), "groupID", userInputArray[1]);
-						validateResponse(readFromServer(), "subject", prep(userInputArray[2].split("\\|")[0]));
-						validateResponse(readFromServer(), "content", prep(userInputArray[2].split("\\|", 2)[1]));
+						writeToServer(request, "post");
+						validateResponse(request, readFromServer(), "groupID", userInputArray[1]);
+						validateResponse(request, readFromServer(), "subject", prep(userInputArray[2].split("\\|")[0]));
+						validateResponse(request, readFromServer(), "content", prep(userInputArray[2].split("\\|", 2)[1]));
 						break;
 						
 					case "groupusers":
 					case "users":
-						request.writeBytes("users" + "\r\n");
-						validateResponse(readFromServer(), "groupID", userInputArray[1]);
+						writeToServer(request, "users");
+						validateResponse(request, readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
 					case "groupleave":
 					case "leave":
-						request.writeBytes("leave" + "\r\n");
-						validateResponse(readFromServer(), "groupID", userInputArray[1]);
+						writeToServer(request, "leave");
+						validateResponse(request, readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
 					case "groupmessage":
 					case "message":
-						request.writeBytes("message" + "\r\n");
-						validateResponse(readFromServer(), "messageID", userInputArray[1]);
+						writeToServer(request, "message");
+						validateResponse(request, readFromServer(), "messageID", userInputArray[1]);
 						break;
 						
 					case "grouplistmessages":
 					case "listmessages":
-						request.writeBytes("listmessages" + "\r\n");
-						validateResponse(readFromServer(), "groupID", userInputArray[1]);
+						writeToServer(request, "listmessages");
+						validateResponse(request, readFromServer(), "groupID", userInputArray[1]);
 						break;
 						
 					case "exit":
-						request.writeBytes("exit" + "\r\n");
+						writeToServer(request, "exit");
 						print(readFromServer());
 						break;
 						
@@ -198,12 +215,12 @@ public class ClientPartTwo {
 						print(readFromServer());
 						
 						// print out updates and update last active date
-						request.writeBytes("updates" + "\r\n");
+						writeToServer(request, "updates");
 						print(readFromServer());
 					}
 				} while (!userInput.startsWith("exit"));/**/
 				
-				request.writeBytes("exit" + "\r\n");
+				writeToServer(request, "exit");
 				
 				System.out.println("Goodbye.");
 				

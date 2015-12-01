@@ -260,7 +260,7 @@ public class Model {
 	public String listGroups(int id) {		
 		TableHelper table = new TableHelper();
 		table.addRow("ID", "Name", "Joined");
-		table.addRow("----", "--------", "----------------------");
+		table.addRow("----", "--------", "-------");
 		List<Map<String, String>> groups = getListOfResults("SELECT * FROM groups LIMIT 0,5", "id", "name");
 		List<Integer> currentlyJoined = getListOfIntegerResults("SELECT groupID FROM usersInGroups WHERE userID = " + id 
 				+ " AND leftDate = 0;", "groupID");

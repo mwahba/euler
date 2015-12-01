@@ -1,7 +1,7 @@
 package networking.projecttwo;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -21,8 +21,8 @@ final class Request implements Runnable {
 	Socket socket;
 	Model model;
 	
-	DataOutputStream out;
-	static BufferedReader br;
+	BufferedOutputStream out;
+	BufferedReader br;
 	
 	Map<String, Integer> groupIDs;
 	
@@ -36,10 +36,16 @@ final class Request implements Runnable {
 		return string.replaceAll("[^A-Za-z0-9]", "");
 	}
 	
-	private static String readFromClient() throws IOException {
+	private static String readFromClient(BufferedReader br) throws IOException {
 		boolean wait = true;
 		String clientRequest = "";
 		while (wait) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
 			if ((clientRequest = br.readLine()).length() > 0) {
 				wait = false;
 			}
@@ -53,7 +59,8 @@ final class Request implements Runnable {
 	}
 	
 	private void reply(String toSendBack) throws IOException {
-		out.writeBytes(toSendBack + "\r\n");
+		out.write((toSendBack + "\r\n").getBytes());
+		out.flush();
 	}
 	
 	private int getGroupID(String groupName) {
@@ -64,10 +71,11 @@ final class Request implements Runnable {
 		}
 		return 0;
 	}
+	
 	private void processRequest() throws Exception {
 		// Get a reference to the socket's input and output streams
 		InputStream is = socket.getInputStream();
-		out = new DataOutputStream(socket.getOutputStream());
+		out = new BufferedOutputStream(socket.getOutputStream());
 		br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
 		
 		System.out.println("Client connected: " + socket.getRemoteSocketAddress().toString());
@@ -85,7 +93,7 @@ final class Request implements Runnable {
 		groupIDs = model.getGroupIDs();
 		
 		do {
-			command = br.readLine();
+			command = readFromClient(br) + " ";
 			System.out.println("User " + username + " (" + userID + ") processing command: " + command);
 			switch (command.split(" ")[0].toLowerCase()) {
 			case "groups":
@@ -99,37 +107,43 @@ final class Request implements Runnable {
 			
 			case "users":
 				reply("groupID");
-				reply(response(model.listUsers(getGroupID(readFromClient()))));
+				reply(response(model.listUsers(getGroupID(readFromClient(br)))));
 				break;
 				
 			case "join":
 				reply("groupID");
-				reply(response(model.joinGroup(userID, getGroupID(readFromClient()))));
+				reply(response(model.joinGroup(userID, getGroupID(readFromClient(br)))));
 				break;
 				
 			case "leave":
 				reply("groupID");
-				reply(response(model.leaveGroup(userID, getGroupID(readFromClient()))));
+				reply(response(model.leaveGroup(userID, getGroupID(readFromClient(br)))));
 				break;
 			
 			case "listmessages":
 				reply("groupID");
-				reply(response(model.getListOfMessages(userID, getGroupID(readFromClient()))));
+				reply(response(model.getListOfMessages(userID, getGroupID(readFromClient(br)))));
 				break;
 				
 			case "post":
 				reply("groupID");
-				int groupID = getGroupID(readFromClient());
+				int groupID = getGroupID(readFromClient(br));
 				reply("subject");
-				String subject = readFromClient();
+				String subject = readFromClient(br);
 				reply("content");
-				String content = readFromClient();
+				String content = readFromClient(br);
 				reply(response(model.postMessage(userID, groupID, subject, content)));				
 				break;
 			
 			case "message":
 				reply("messageID");
-				int messageID = Integer.parseInt(trim(br.readLine()));
+				String userResponse = readFromClient(br);
+				int messageID;
+				if (userResponse.split(" ").length > 1) {
+					messageID = Integer.parseInt(userResponse.split(" ")[1]);
+				} else {
+					messageID = Integer.parseInt(userResponse.split(" ")[0]);
+				}
 				reply(response(model.getPost(userID, messageID)));
 				break;
 				
@@ -149,7 +163,7 @@ final class Request implements Runnable {
 			default:
 				break;
 			}
-		} while (!command.equalsIgnoreCase("exit"));
+		} while (!command.startsWith("exit"));
 		
 		System.out.println("Client disconnected: " + socket.getRemoteSocketAddress().toString());
 		
