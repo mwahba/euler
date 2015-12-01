@@ -89,4 +89,11 @@ Server Implementation:
 	The server is a loop that continuously checks for new connections and creates a new thread per request. The request is open as long as the client is connected to it.
 	The request utilizes a model object that interacts with a mysql database, set by default to port 3306 running on the localhost.
 	One request thread is available per client connection.
-	The model creates separate connections to the database per command, executes the appropriate command, obtains the results, then closes the connections. This design was chosen to allow multiple smaller connections and less blockage overall. 
+	The model creates separate connections to the database per command, executes the appropriate command, obtains the results, then closes the connections. This design was chosen to allow multiple smaller connections and less blockage overall.
+	
+Issue concerning the buffers:
+	There was an issue with the server receiving the client's request/output, and the client receiving the output of the server, even though the responses are absolutely fine.
+	The issue was that either side would be waiting for the blocking method ("readLine()") to obtain the information.
+	The issue was resolved by using a BufferedOutputStream object instead of the DataOutputStream object that was used previously. 
+		This allows the output to read in the bytes from a string and be able to flush correctly as the flushing did not work properly when using the DataOutputStream.
+		The BufferedOutputStream then depends on a buffer ending with a new line and sends a byte array rather than a string, hence not relying on the String being structured properly, and also allows a buffer to be utilized within the output, similar to the BufferedReader. 
